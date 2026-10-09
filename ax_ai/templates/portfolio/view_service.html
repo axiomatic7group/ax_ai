@@ -1,0 +1,63 @@
+
+
+{% extends "base public.html" %}
+{% block  content %}
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "{{campaign_funnel.slug}}",
+    "description": "Fractional C-Suite services engineered for technical founders. We deploy an internal AI Operating System to scale your financial architecture from day one, giving you an automated off-ramp when you are ready to hire in-house.",
+    "provider": {
+        "@type": "AI Fractional C-Suite/Consulting",
+        "name": "Fractional C-Suite by Axiomatic Lab",
+        "url": "https://axiomaticlab.com"
+    }
+    }
+    </script>
+
+
+    <div class="services_body">
+        {{services_body|safe}}
+    </div>
+
+    {% if new_lead_form %}
+        <div class="main_funnel_hero">
+            <div class="main_funnel_hero_visual">
+                {% if funnel_hero_img %}
+                    <img src="{{funnel_hero_img}}" class="funnel_hero">
+                {% else %}
+                    {{funnel_hero_md|safe}}
+                {% endif %}
+            </div>
+            
+            <div class="main_funnel_hero_form" id="contact_funnel">
+                <form name="new_user_n_info_form" id="new_user_n_info_form" action="/portfolio/campaign/{{campaign_funnel_id}}" method="post">
+                    {% csrf_token %}
+
+                        {{new_lead_form.as_p|safe}}
+
+                        {% for key, value in funnel_input_form.items %}
+                        <p>
+                            <label for="{{key}}">{{key}} :</label><br>
+                            {% if value|length == 1%}
+                                <textarea id="{{key}}" name="{{key}}" placeholder={{value}}></textarea>
+                            {% else %}
+                                <select name="{{key}}" id="{{key}}">
+                                    {% for i in value %}
+                                        <option value="{{i}}">{{i}}</option>
+                                    {% endfor %}
+                                </select>
+
+                            {% endif %}
+                        </p>
+                        {% endfor %}
+                        
+                        <input type="submit" value="{{campaign_funnel.funnel_name}}">
+                </form>
+            </div>
+        </div>
+
+    {% endif %}
+
+{% endblock  %}

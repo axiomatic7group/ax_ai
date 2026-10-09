@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form_div" >
+    <form name='add_task_status_list_form' id='add_task_status_list_form' action='/cadence/add_task_status_list/' method='post'>
+        {% csrf_token %}
+
+        {{add_task_status_list_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

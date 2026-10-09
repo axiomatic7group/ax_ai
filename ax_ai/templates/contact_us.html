@@ -1,0 +1,15 @@
+{% extends "base public.html" %}
+{% block  content %}
+
+<div class="form_div" >
+    <form name='DetailedSignUpForm_form' id='DetailedSignUpForm_form' action='/contact/' method='post'>
+        {% csrf_token %}
+
+        {{DetailedSignUpForm_form.as_p|safe}}
+
+        <input type="submit" value="Get in Touch with us Today!">
+
+    </form>
+</div>
+
+{% endblock %}

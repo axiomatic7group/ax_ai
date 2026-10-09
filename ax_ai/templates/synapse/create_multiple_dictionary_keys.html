@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form_div">
+    <form name='create_dictionary_keys_form' id='create_dictionary_keys_form' action='/synapse/add_multiple_dictionary_keys/' method='post'>
+        {% csrf_token %}
+            {% for e_form in list_of_forms %}
+                <div class='dicitonary_key_forms'>
+                    {{e_form.as_p}}
+                </div>
+            {% endfor %}
+        <input type="submit" value="post">
+    </form>
+</div>
+{% endblock %}

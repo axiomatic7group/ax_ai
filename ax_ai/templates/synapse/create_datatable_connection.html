@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form_div">
+    <form name='create_datatable_connection_form' id='create_datatable_connection_form' action='/synapse/add_datatable_connection/' method='post'>
+        {% csrf_token %}
+            {{create_datatable_connection_form.as_p|safe}}
+        <input type="submit" value="post">
+    </form>
+</div>
+{% endblock %}

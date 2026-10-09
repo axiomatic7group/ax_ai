@@ -1,0 +1,14 @@
+{% extends "base public.html" %}
+{% block content %}
+
+<div class="form_div" >
+    <form name='user_auth_form' id='user_auth_form' action='/signup/' method='post'>
+        {% csrf_token %}
+
+        {{create_user_form.as_p|safe}}
+
+        <input type="submit" value="Create Account">
+
+    </form>
+</div>
+{% endblock %}

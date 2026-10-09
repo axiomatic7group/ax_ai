@@ -1,0 +1,10 @@
+
+{% extends "base.html" %}
+{% block  content %}
+    <form name="new_project_form" id="new_project_form" action="" method="post">
+        {% csrf_token %}
+            {{new_project_form.as_p|safe}}
+        
+            <input type="submit" value="post">
+    </form>
+{% endblock  %}

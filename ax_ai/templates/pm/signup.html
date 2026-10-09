@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="form_div" >
+    <form name='create_user_n_info' id='create_user_n_info' action='/cadence/signup/' method='post'>
+        {% csrf_token %}
+
+        {{create_user_form.as_p|safe}}
+        {{user_info_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

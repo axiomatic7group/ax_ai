@@ -1,0 +1,20 @@
+
+{% extends "base.html" %}
+{% block  content %}
+    <form name="link_in_bio_form" id="link_in_bio_form" action="" method="post">
+        {% csrf_token %}
+            {{link_in_bio_form.as_p|safe}}
+        
+            <input type="submit" value="post">
+    </form>
+
+    {% if new_link_form %}
+        <form name="new_link_form" id="new_link_form" action="" method="post">
+            {% csrf_token %}
+                {{new_link_form.as_p|safe}}
+            
+                <input type="submit" value="post">
+        </form>
+    {% endif %}
+
+{% endblock  %}

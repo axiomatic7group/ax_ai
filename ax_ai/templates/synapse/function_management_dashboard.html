@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="main_content_synapse">
+<div class="funct_mgmt">
+    <div class="function_df">
+        <h3>Data Assets:</h3>
+    {% for i_func in function_df %}
+        <div id="{{i_func.connection_function_name}}" class="function">
+            {% if i_func.connection_function_name %}
+                <form name='function_management_dashboard_form' class="dashboard_form" id='function_management_dashboard_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    <p class="function_name_label"> Source: {{i_func.connection_function_name|safe}}</p>
+                    
+                    <input type="hidden" id="function_name" name="function_name" value="{{ i_func.connection_function_name }}">     
+                        {% for key, value in  i_func.function_input_values_schema.items %}
+                            {% if value %}
+                                <div class="form_input_value">
+                                    <label for="{{ key }}">{{ key }}:</label><br>
+                                    <input type="text" id="{{ key }}" name="__input__{{ key }}__">
+                                </div>                        
+                            {% endif %}
+                        {% endfor %}
+                    <input type="submit" value="See Data">
+                </form>
+            {% else %}
+                <form name='function_management_dashboard_form' class="dashboard_form" id='function_management_dashboard_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    <p class="function_name_label">Source: {{i_func.local_function_name|safe}}</p>
+
+                    <input type="hidden" id="local_function_name" name="local_function_name" value="{{ i_func.local_function_name }}">     
+                        {% for key, value in  i_func.function_input_values_schema.items %}
+                            {% if value %}
+                                <div class="form_input_value">
+                                    <label for="{{ key }}">{{ key }}:</label><br>
+                                    <input type="text" id="{{ key }}" name="__input__{{ key }}__">
+                                </div>                        
+                            {% endif %}
+                        {% endfor %}
+                    <input type="submit" value="See Data">
+                </form>
+
+            {% endif %}
+            
+            {% for i_user_dict_key in output_user_saved_inputs %}
+                {% if i_user_dict_key.input_connection_function_id == i_func.id %}
+                <p class="saved_input_label">Data Saved Inputs:</p>
+                
+                <form name='function_management_dashboard_form' class="dashboard_form" id='function_management_dashboard_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    
+                    <input type="hidden" id="function_name" name="function_name" value="{{ i_func.connection_function_name }}">
+                    
+                    {% for key, value in  i_user_dict_key.input_value.items %}
+                        {% if value %}
+                            <input type="hidden" id="__input__{{ key }}__" name="__input__{{ key }}__" value="{{ value }}">
+
+                            <input type="submit" value="See Data - {{value|safe}}">                   
+                        {% endif %}
+                    {% endfor %}      
+
+                </form>
+                
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+    </div>
+
+    <div class="output_user_dict_key mapper-canvas" id="canvas">
+        <svg class="connection-svg" id="svgLayer">
+            <!-- The connector line path -->
+            <path id="linkPath" d="" fill="none" stroke="url(#gradient)" stroke-width="3" />
+            
+            <!-- Gradient definition for the connector line -->
+            <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="var(--brand-primary)" />
+                    <stop offset="100%" stop-color="var(--brand-primary)" />
+                </linearGradient>
+            </defs>
+        </svg>
+        <div class="mapping-pill" id="midPill">
+            <span class="pill-dot"></span> Tickers
+        </div>
+        
+        {% for i_dictionary_keys in dictionary_keys %}
+            <div class="card dict_keys" style="width: 15rem;">
+                <div class="card-body">
+                    <h5 class="card-title">{{i_dictionary_keys.unique_key|safe}}</h5>
+                    <p class="card-text">{{i_dictionary_keys.unique_key_desc|safe}}</p>
+                    
+                    {% for i_user_dict_key in output_user_dict_key %}
+                        {% if i_user_dict_key.dictionary_key_id == i_dictionary_keys.id %}
+                            {% if i_user_dict_key.dictionary_table_key == "CIK" %}
+                                
+                                <h6 class="card-subtitle mb-2 text-body-secondary node-anchor anchor-right" id="sourceAnchor"></h6>
+                            {% elif i_user_dict_key.dictionary_table_key == "ticker" %}
+                                <h6 class="card-subtitle mb-2 text-body-secondary node-anchor anchor-left" id="targetAnchor"></h6>
+                            {% else %}
+                                <h6 class="card-subtitle mb-2 text-body-secondary">{{i_user_dict_key.dictionary_table_key|safe}}</h6>
+                            {% endif %}
+                            <a href="#{{i_user_dict_key.connection_function_name}}" class="card-link">{{i_user_dict_key.connection_function_name|safe}}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+
+        {% for i_user_dict_key in output_user_dict_key %}
+            {% if i_user_dict_key.dictionary_key_id == 0 %}
+                <div class="card" style="width: 18rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{i_user_dict_key.dictionary_table_key|safe}}</h5>    
+                        <h6 class="card-subtitle mb-2 text-body-secondary">{{i_user_dict_key.data_value_column|safe}}</h6>
+                        <p class="card-text">{{i_user_dict_key.function_type|safe}}</p>
+
+                        <a href="#{{i_user_dict_key.connection_function_name}}" class="card-link">{{i_user_dict_key.connection_function_name|safe}}</a>
+
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+
+    </div>
+</div>
+
+<div class="second_main">
+    <div class="ai_message_form">
+
+        {% if task_response %}
+            <div class="task_results">
+                {{task_response|safe}}
+            </div>
+        {% endif %}
+
+        <div class="message_forms">
+            <div class="tab-container">
+                <button class="tab-button active" onclick="openTab(event, 'tab1')">Saved Inputs</button>
+                <button class="tab-button" onclick="openTab(event, 'tab2')">Data Connection</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab1" class="tab-content active">
+                <form name='add_axiom_bot_message_saved_input_form' id='add_axiom_bot_message_saved_input_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    {{add_axiom_bot_message_saved_input.as_p|safe}}
+                    <input type="submit" value="Ask AI">                     
+                </form>
+            </div>
+
+            <div id="tab2" class="tab-content">
+                <form name='add_axiom_bot_message_connection_func_form' id='add_axiom_bot_message_connection_func_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    {{add_axiom_bot_message_connection_func.as_p|safe}}
+                    <input type="submit" value="Ask AI">                     
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    {% if temp_output.temp_data %}
+        <div class='temp_output'>
+            {{temp_output.temp_data|safe}}
+        </div>
+    {% else %}
+        <div class='temp_output'>
+            {{temp_output|safe}}
+        </div>
+    {% endif %}
+</div>
+<script>
+    function openTab(evt, tabId) {
+        // Hide all tab content
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        // Remove active class from all buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        // Show current tab content and add active class to clicked button
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+
+<script>
+        function updateMappingLine() {
+            const canvas = document.getElementById('canvas').getBoundingClientRect();
+            const source = document.getElementById('sourceAnchor').getBoundingClientRect();
+            const target = document.getElementById('targetAnchor').getBoundingClientRect();
+            const path = document.getElementById('linkPath');
+            const pill = document.getElementById('midPill');
+
+            // Calculate exact positions relative to the canvas container coordinate field
+            const x1 = source.left - canvas.left + (source.width / 2);
+            const y1 = source.top - canvas.top + (source.height / 2);
+            
+            const x2 = target.left - canvas.left + (target.width / 2);
+            const y2 = target.top - canvas.top + (target.height / 2);
+
+            // Create a smooth cubic bezier curve mathematical string
+            const controlOffset = Math.abs(x2 - x1) * 0.5;
+            const dStr = `M ${x1} ${y1} C ${x1 + controlOffset} ${y1}, ${x2 - controlOffset} ${y2}, ${x2} ${y2}`;
+            
+            path.setAttribute('d', dStr);
+
+            // Center the interactive floating pill directly on the midpoint of the calculated line
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+            pill.style.left = `${midX}px`;
+            pill.style.top = `${midY}px`;
+        }
+
+        // Render calculations on initial component mount
+        window.addEventListener('DOMContentLoaded', updateMappingLine);
+        // Ensure UI scales cleanly if user switches browser viewport sizes
+        window.addEventListener('resize', updateMappingLine);
+    </script>
+
+</div>
+{% endblock %}

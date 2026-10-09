@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="main_project" >
+    <div class="project_top_buttons">
+        <form name='run_project_template' id='run_project_template' action='../run_project_template/{{project_template_id}}' method='get'>
+            <input type="submit" value="Run Project">
+        </form>
+
+        <form name='edit_project_template' id='edit_project_template' action='../build_project_template/{{project_template_id}}' method='get'>
+            <input type="submit" value="Edit Project">
+        </form>
+
+        <form name='copy_project_template' id='copy_project_template' action='' method='get'>
+            <input type="submit" value="Copy Project">
+        </form>
+    </div>
+    <div class="project_side">
+        <div class="project_info">
+            <h2 class="project_name">{{project_to_build.project_name}} </h2>
+            <p class="project_desc">{{project_to_build.project_description}} </p>
+            
+        </div>
+    </div>
+
+    <div class="task_side">
+        <form name='copy_project' class='copy_project' id='copy_project' action='' method='post' enctype="multipart/form-data">
+
+            {% csrf_token %}
+            <div class="project_to_copy_form">
+                {{project_to_copy_form.as_p|safe}}
+            </div>
+
+            <input type="submit" value="Copy">
+
+            {% if list_of_tasks %}
+                {% for task in list_of_tasks %}
+                    <div class="task_card">
+                        <div class="task_card_left">
+                            <h3 class="task_name"> {{task.task_project_order}}. {{project_to_build.project_name}}</h3>
+                            <p> {{task.user_prompt}} </p>
+
+                            {% if list_of_tasks_attach %}
+                                {% for task_attach in list_of_tasks_attach %}
+                                    {% if task_attach.attachemnet_task_id == task.id %}
+                                        <p class="task_attachemnet">{{task_attach.attachemnet|safe}}</p>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+
+                            {% if list_of_tasks_relationship %}
+                                {% for task_rel in list_of_tasks_relationship %}
+                                    {% if task_rel.main_task_id == task.id%}
+                                        <p class="task_rel">{{task_rel.task_relationship|safe}} - {{task_rel.second_task_id|safe}}</p>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        {% if task.model_response %}
+                            <div class="task_card_right">
+                                {% for i_rsp in task_response %}
+                                    <div class="form_div_task">
+                                    {% if i_rsp.id == task.id %}
+                                        {{ i_rsp.task_form_to_edit.as_p|safe }}
+                                        <label for="file-upload">Choose File:</label>
+                                        <input type="file" id="file-upload" name="filename">
+                                    {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </form>
+
+    </div>
+
+
+</div>
+{% endblock %}
+
+
+
+

@@ -1,0 +1,412 @@
+
+:root {
+  --primary-light-color: #637899;
+  --primary-dark-color: #5D3F6A;
+  --secondary-light-color: #dcf2ff;
+  --secondary-dark-color: #004c12;
+  --font-stack: Helvetica, Arial, sans-serif;
+}
+
+
+body {
+    font-family: 'Lucida Consosle', monospace;
+    background-color: var(--secondary-light-color);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    margin: 0;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    margin: 1%;
+    font: inherit;
+}
+
+form.search {
+    display: flex;
+    flex-direction: inherit;
+    width: fit-content;
+    margin: 1%;
+    font: inherit;
+}
+
+form p {
+    margin: 3% 0;
+    display: flex;
+    flex-direction: column;
+}
+
+form select {
+    padding: 2%;
+    background: white;
+    border-style: groove;
+    border-radius: 0.35em;
+    border-color: var(--secondary-light-color);
+    font: inherit;
+}
+
+select option {
+    appearance: none;
+    background-color: var(--secondary-light-color);
+    font: inherit;
+}
+
+
+form input[type='submit'] {
+    padding: 2%;
+    background: var(--secondary-light-color);
+    border-style: groove;
+    border-radius: 0.35em;
+    border-color: var(--secondary-light-color);
+    font: inherit;
+}
+
+form input{
+    padding: 2%;
+    background: white;
+    border-style: groove;
+    border-radius: 0.35em;
+    border-color: var(--secondary-light-color);
+    font: inherit;
+}
+
+form input[type='submit']:hover {
+    padding: 2%;
+    background: var(--primary-dark-color);
+    border-style: groove;
+    border-radius: 0.35em;
+    border-color: var(--primary-dark-color);
+    font: inherit;
+    color: var(--secondary-light-color);
+}
+form input[type='search']:hover {
+    padding: .375rem .75rem;
+    background: var(--secondary-light-color);
+    border-style: groove;
+    border-radius: 0.35em;
+    border-color: var(--primary-light-color);
+    font: inherit;
+}
+
+form input:hover {
+    padding: 2%;
+    background: var(--secondary-light-color);
+    border-style: groove;
+    border-radius: 0.35em;
+    border-color: var(--secondary-light-color);
+    font: inherit;
+}
+
+.project_list_button {
+    width: auto;
+}
+
+.sidebarbutton {
+    background: none;
+    margin: 2%;
+    border-style: none;
+    border-radius: 0.35em;
+    color: var(--primary-light-color);
+}
+
+.navbar-collapse-side-links {
+    max-width: fit-content;
+}
+
+.main_project_header {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    min-height: 20%;
+    padding: 3%;
+}
+
+.sidebar_content {
+    width: max-content;
+}
+
+.list-group-item {
+    border: none !important;
+    border-radius: 0 !important;
+}
+
+
+a.sidebar_link {
+    background-color: var(--secondary-light-color) !important;
+    color: var(--primary-light-color) !important;
+}
+
+a.sidebar_link:hover {
+    background-color: var(--primary-dark-color) !important; 
+    color: var(--secondary-light-color) !important;
+}
+
+.dropdown-menu {
+    right: 0;
+    left: auto !important;
+}
+
+.collapsed {
+    visibility: collapse;
+}
+
+.mainsidebar {
+    background: var(--secondary-light-color);
+    flex-grow: 1;
+}
+
+.sidebarcontainer {
+    background: var(--secondary-light-color);
+    display: flex;
+    overflow-y: clip;
+    flex-flow: column;
+    padding: 3% 3% 0 3%;;
+    justify-content: space-between;
+    height: fit-content;
+}
+
+.hidden_sidebar {
+    background-color: inherit; /* var(--primary-light-color); */
+}
+
+.project_list_div {
+    margin: 1%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    overflow-y: scroll;
+}
+
+.projectcard {
+    margin: 1%;
+    width: 100%;
+    overflow: scroll;
+    border-style: groove;
+    border-color: black;
+    background-color: var(--secondary-light-color);
+}
+
+.card-body {
+    justify-content: space-between;
+    display: flex;
+    flex-flow: column;
+}
+
+.btn-primary {
+    background-color: var(--primary-dark-color);
+    border-color: var(--primary-dark-color);
+    color: var(--secondary-light-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-light-color);
+    border-color: var(--primary-dark-color);
+    color: var(--secondary-light-color);
+}
+
+.user_dashboard_header{
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.user_dashboard { 
+    padding: 3%;
+    border-radius: 25px;
+    background-color: aliceblue;
+}
+
+.user_dashboard_body {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin: 2% 0%;
+    font-size: 14px;
+}
+
+.user_dashboard_body_tasks{
+    max-width: 50%;
+}
+
+.user_dashboard_body_projects{
+    max-width: 50%;
+}
+
+div.project_add_buttons {
+    color: inherit;
+}
+
+a.project_a_buttons {
+    text-decoration:none !important;
+    color: inherit;
+    font-weight: inherit;
+}
+
+button.project_a_buttons {
+    background-color: inherit;
+    border-color: var(--primary-dark-color);
+    color: var(--primary-light-color);
+    font-weight: bold;
+}
+
+button.project_a_buttons:hover {
+    background-color: var(--primary-dark-color);
+    border-color: var(--primary-dark-color);
+    color: var(--secondary-light-color);
+}
+
+.deliverables_buttons {
+    visibility: visible !important;
+    display: flex;
+    justify-content: space-between;
+}
+
+.deliverable_button {
+    visibility: visible !important;
+    border-color: var(--primary-dark-color);
+    color: var(--primary-light-color);
+    font-weight: bold;
+}
+
+.deliverable_button:hover {
+    visibility: visible !important;
+    background-color: var(--primary-dark-color);
+    border-color: var(--primary-dark-color);
+    color: var(--secondary-light-color);
+}
+
+button.navbar-toggler {
+    visibility: visible !important;
+}
+
+.main_project {
+    width: 100%;
+    margin: 1%;
+    padding: 1%;
+}
+
+.main_task {
+    width: 100%;
+    margin: 1%;
+    padding: 1%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.project_tasks_div {
+    margin: 1% 0;
+}
+
+.deliverables_taskss_div {
+    margin: 1% 0;
+}
+
+.tr_completed {
+    background-color: #b8f5d9;
+}
+
+.tr_not_started {
+    background-color: #e1e3e2;
+}
+
+.tr_late {
+    background-color: #fcdede;
+}
+
+.tr_past_due {
+    background-color: #f7a8a8;
+}
+
+.div_completed {
+    background-color: #b8f5d9;
+}
+
+.div_not_started {
+    background-color: #e1e3e2;
+}
+
+.div_late {
+    background-color: #fcdede;
+}
+
+.div_past_due {
+    background-color: #f7a8a8;
+}
+
+.main_task_side_status_header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.main_task_main_body {
+    border-radius: 5%;
+    padding: 1%;
+}
+
+.form_div {
+    margin: 1%;
+    height: fit-content;
+    border-radius: 15px;
+    border-color: var(--primary-light-color);
+    border-style: groove;
+    padding: 2%;
+    overflow: auto;
+}
+
+.list-group-item {
+    background-color: var(--secondary-light-color);
+}
+
+input.done_complete_tasks_button {
+    width: fit-content;
+    background: none !important;
+    border: none !important;
+    text-decoration: underline;
+
+}
+
+input.delete_complete_tasks_button {
+    width: fit-content;
+    background: none !important;
+    border: none !important;
+    text-decoration: underline;
+
+}
+
+.alert {
+    max-height: 5%;
+    margin: 3%;
+}
+
+@media screen and (max-width: 600px) {
+    .navbar-collapse-side-links {
+        max-width: inherit;
+    }
+
+    form.search {
+        width: 60%;
+    }
+
+    .main_project_header {
+        flex-flow: column-reverse;
+        height: 25%;
+    }
+
+    .main_project {
+        margin: 8% 0%;
+        padding: 3% 0%;
+    }
+
+    .user_dashboard_body_tasks{
+        max-width: 100%;
+    }
+
+    .user_dashboard_body_projects{
+        max-width: 100%;
+    }
+
+}

@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+<style>
+    /* Hardware Toggle Styles */
+        .toggle-group {
+            display: flex;
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.25rem;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background-color: var(--border);
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Slider Controls Box */
+        .controls-card {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .slider-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .memory-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--highlight);
+        }
+
+        .slider-input {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--border-muted);
+            outline: none;
+            margin: 1.5rem 0;
+            border: solid thin var(--border);
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--highlight);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--highlight);
+        }
+
+        /* Grid Layout */
+        .model-grid {
+            display: flex;
+            flex-flow: wrap;
+            justify-content: space-evenly;
+            gap: 1rem;
+        }
+
+        .model-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-muted);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 49%;
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .model-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .model-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .architecture-badge {
+            background-color: var(--bg-dark);
+            border: 3px solid var(--border);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Matrix Table rows for Quantizations */
+        .quant-matrix {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .quant-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            padding: 0.35rem;
+            border-radius: 6px;
+            font-size: 12px;
+            align-items: center;
+        }
+
+        .status-fit {
+            background-color: var(--border-muted);
+            border: 1px solid var(--bg-dark);
+        }
+
+        .status-fit .quant-name { color: var(--info); font-weight: 600; }
+        .status-fit .context-capacity { color: var(--bullish); }
+
+        .status-fail {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--highlight);
+            opacity: 0.5;
+        }
+
+        .status-fail .quant-name { color: var(--text-muted); }
+        .status-fail .context-capacity { color: var(--bearish); }
+
+        .text-right { text-align: right; }
+    </style>
+
+
+<div class="main_marketplace">
+
+    <div class="main_marketplace_tabs">
+
+        <div class="marketplace_tabs">
+            <div class="tab-container">
+                <button class="tab-button active" onclick="openTab(event, 'tab1')">Marketplace</button>
+                <button class="tab-button" onclick="openTab(event, 'tab2')">Run Local Model</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab1" class="tab-content active">
+                <p>Don't know what model to get? Let us help...</p>
+            </div>
+
+            <div id="tab2" class="tab-content">
+                <div class="models_initiate_form" >
+                    <form name='models_to_initiate_form' id='models_to_initiate_form' action='' method='post'>
+                        {% csrf_token %}
+
+                        <select class="form-select start_stop" name="start_stop">
+                            <option value="start">start</option>
+                            <option value="stop">stop</option>
+                        </select>
+
+                        <select class="form-select models_to_initiate" name="models_to_initiate">
+                            {% for i_opt in models_to_initiate %}
+                                    <option value={{i_opt.id}}>{{i_opt.name_nd_quant}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <input type="submit" value="post">
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="controls-card">
+        <div class="control-row">
+            <!-- Hardware Mode Selector -->
+            <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">Hardware Pool Type</label>
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-mode="vram">GPU VRAM</button>
+                    <button class="toggle-btn" data-mode="ram">System RAM</button>
+                </div>
+            </div>
+
+            <!-- Target Allocation Slider -->
+            <div class="slider-container">
+                <div class="slider-header">
+                    <span class="slider-title">Available Target Memory Pool Size</span>
+                    <span class="memory-display" id="memoryValue">32 GB</span>
+                </div>
+                <input type="range" min="8" max="64" value="32" step="1" class="slider-input" id="memorySlider">
+            </div>
+        </div>
+        
+        <p class="overhead-notice" id="overheadExplanation">
+            Reserve:<span class="overhead-highlight" id="overheadValue">0.0 GB</span>; No reserve needed in VRAM.
+        </p>
+    </div>
+
+    <!-- Render Targets -->
+    <div class="model-grid" id="modelGrid"></div>
+</div>
+
+{{ django_models_list|json_script:"models-data" }}
+
+<script>
+    const QUANT_MULTIPLIERS = {
+        "FP16 (Unquantized)": 2.0,
+        "8-bit (Q8)": 1.15,
+        "4-bit (Q4)": 0.55
+    };
+
+    const GQA_METRICS = {
+        layers: 32,
+        kvHeads: 8,
+        headDim: 128,
+        precisionBytes: 2 
+    };
+
+    const BYTES_PER_TOKEN = 2 * GQA_METRICS.layers * GQA_METRICS.kvHeads * GQA_METRICS.headDim * GQA_METRICS.precisionBytes;
+    const GB_PER_TOKEN = BYTES_PER_TOKEN / Math.pow(1024, 3);
+
+    // Current Active UI State variables
+    let currentMode = 'vram'; 
+
+    const slider = document.getElementById('memorySlider');
+    const memoryDisplay = document.getElementById('memoryValue');
+    const modelGrid = document.getElementById('modelGrid');
+    const overheadValueDisplay = document.getElementById('overheadValue');
+    const overheadExplanation = document.getElementById('overheadExplanation');
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    
+    const rawModelsData = JSON.parse(document.getElementById('models-data').textContent);
+
+    function updateMatrix() {
+        const selectedMemoryGb = parseInt(slider.value);
+        memoryDisplay.textContent = `${selectedMemoryGb} GB`;
+
+        // Dynamically shift operating system baseline reservations based on current layout mode
+        const systemOverheadGb = (currentMode === 'ram') ? 2.0 : 0.0;
+        
+        // Update notice texts dynamically
+        overheadValueDisplay.textContent = `${systemOverheadGb.toFixed(1)} GB`;
+        if (currentMode === 'ram') {
+            overheadExplanation.innerHTML = `Calculations reserve <span class="overhead-highlight">2.0 GB</span> for baseline operating system overhead to protect system stability when running directly out of primary System RAM.`;
+        } else {
+            overheadExplanation.innerHTML = `Calculations reserve <span class="overhead-highlight">0.0 GB</span> for baseline operating system overhead since your OS layer executes cleanly outside your dedicated GPU VRAM pool.`;
+        }
+
+        modelGrid.innerHTML = '';
+
+        rawModelsData.forEach(model => {
+            const rawModelsInfo = model.model_info;
+            const card = document.createElement('div');
+            card.className = 'model-card';
+            
+            const isMoE = model.total_params !== model.active_params;
+            const archLabel = isMoE ? `Mixture of Experts (MoE)` : `${rawModelsInfo.model_type}`;
+            const metaLabel = isMoE ? 
+                `Total parameters: ${model.total_params}B | Active: ${model.active_params}B` : 
+                `Parameters: ${model.total_params}B`;
+
+            let htmlString = `
+                <div class="model-header">
+                    <div>
+                        <h3 class="model-title">${model.name}</h3>
+                        <div class="model-meta">${metaLabel}</div>
+                    </div>
+                    <span class="architecture-badge">${archLabel}</span>
+                </div>
+                <div class="quant-matrix">
+                            `;
+
+            Object.keys(QUANT_MULTIPLIERS).forEach(quantName => {
+                const hasQuant = rawModelsInfo.hasOwnProperty(quantName);
+                const multiplier = QUANT_MULTIPLIERS[quantName];
+                const staticWeightGb = model.total_params * multiplier;
+                
+                // Final safety limit equation factors in the toggle adjustments
+                const totalRequiredWithOverhead = staticWeightGb + systemOverheadGb; 
+                
+                let rowClass = '';
+                let contextMessage = '';
+
+                if (selectedMemoryGb >= totalRequiredWithOverhead && hasQuant) {
+                    rowClass = 'status-fit';
+                    const remainingMemoryForKv = selectedMemoryGb - totalRequiredWithOverhead;
+                    const maxTokens = Math.floor(remainingMemoryForKv / GB_PER_TOKEN);
+                    
+                    contextMessage = maxTokens > 0 ? 
+                        `✓ Fits smoothly (~${maxTokens.toLocaleString()} context window max)` : 
+                        `✓ Weights fit (Minimal context room remaining)`;
+                } else {
+                    rowClass = 'status-fail';
+                    contextMessage = `✗ Insufficient space (Needs ${totalRequiredWithOverhead.toFixed(1)} GB)`;
+                }
+                
+                let quant_link = "";
+                if (quantName === "4-bit (Q4)" ) { 
+                    quant_link = rawModelsInfo["4-bit (Q4)"];
+                } else if (quantName === "8-bit (Q8)" ) { 
+                    quant_link = rawModelsInfo["8-bit (Q8)"];
+                } else { 
+                    quant_link = rawModelsInfo["FP16 (Unquantized)"];
+                }
+
+                htmlString += `
+                    <div class="quant-row ${rowClass}">
+                        <form action="/daemon/quick_add_local_model/" method="POST" class="clickable-row-form">
+                            <button type="submit" class="clickable-row">
+                                <span class="quant-name">${quantName}</span>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Size: ${staticWeightGb.toFixed(1)} GB</span>
+                                <span class="context-capacity text-right">${contextMessage}</span>
+                                <input type="hidden" name="quant_link" value=${quant_link}>
+                                {% csrf_token %}
+                            </button>
+                        </form>
+                    </div>
+                `;
+            });
+
+            htmlString += `</div>`;
+            card.innerHTML = htmlString;
+            modelGrid.appendChild(card);
+        });
+    }
+
+    // Bind Event Listeners for the toggle button mechanics
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            toggleButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentMode = e.target.getAttribute('data-mode');
+            updateMatrix();
+        });
+    });
+
+    slider.addEventListener('input', updateMatrix);
+    
+    // Initial runtime execution loop
+    updateMatrix();
+</script>
+
+
+
+<script>
+    let msgbox = document.querySelector('.main_container');
+            msgbox.scrollTop = msgbox.scrollHeight;
+</script>
+
+<script>
+    function openTab(evt, tabId) {
+        // Hide all tab content
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        // Remove active class from all buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        // Show current tab content and add active class to clicked button
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+{% endblock %}

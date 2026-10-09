@@ -1,0 +1,24 @@
+
+{% extends "base public.html" %}
+{% block  content %}
+    <div class="project_header">
+            <div class="project_nav">
+                <div class="project_name">
+                    <h2>{{project_to_see.project_name}}</h2>
+                    <p><a href="https://github.com/{{github_info.full_name}}" target="_blank">{{github_info.name}}</a> - <a target="_blank" href="https://github.com/{{github_info.owner.login}}"> {{github_info.owner.login}} </a></p>
+                </div>
+
+                <div class="project_type">
+                    <p> Project Type: </p>
+                    <p class = "project_type_p"> {{project_to_see.project_type|safe}} </p>
+                </div>
+
+            </div>
+
+            <div class="readme">
+                {{github_readme|safe}}
+            </div>
+
+    </div>
+
+{% endblock  %}

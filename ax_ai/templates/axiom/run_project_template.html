@@ -1,0 +1,159 @@
+{% extends "base_sidebar.html" %}
+
+{% block sidebar_content %}
+    <div class="run_projects_sidebar">
+        {% for i_proj in user_projects %}
+            <a href="/axiom/run_project_template/{{i_proj.url_name}}">
+                    {% if i_proj.url_name == project_template_id %}
+                        <div class="proj_sidebar_list active_project">
+
+                            <div class="proj_sidebar_list ">
+                        
+                    {% else %}
+                            <div class="proj_sidebar_list model_chat">
+                    {% endif %}
+                                <h4>  {{i_proj.project_name}}</h4>
+                                <div>
+                                    <p> {{i_proj.project_description}} </p>
+                                </div>
+                            </div>
+                    {% if i_proj.url_name == project_template_id %}
+                        </div>
+                    {% endif %}
+                </a>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block content %}
+
+<div class="main_project" >
+
+    <div class="project_top_buttons">
+        <form name='run_project_template' id='run_project_template' action='' method='post'>
+                {% csrf_token %}
+            <input type="submit" value="Run Project">
+        </form>
+
+        <form name='edit_project_template' id='edit_project_template' action='../build_project_template/{{project_template_id}}' method='get'>
+            <input type="submit" value="Edit Project">
+        </form>
+
+        <form name='copy_project_template' id='copy_project_template' action='../copy_project_template/{{project_template_id}}' method='get'>
+            <input type="submit" value="Copy Project">
+        </form>
+    </div>
+
+
+    <div class="project_side">
+        <div class="project_info">
+            <div>
+                <h2 class="project_name">{{project_to_build.project_name}} </h2>
+                <p class="project_desc">{{project_to_build.project_description}} </p>
+            </div>
+
+            
+        </div>
+        
+        <div class="project_schedule_form">
+            <form name='schedule_project_template' id='schedule_project_template' action='' method='post'>
+                    {% csrf_token %}
+                    {{schedule_form.as_p|safe}}
+                <input type="submit" value="Schedule Project">
+            </form>
+        </div>
+    </div>
+
+    <div class="task_side flow-steps">
+        {% if list_of_tasks %}
+            {% for task in list_of_tasks %}
+                {% if task.id == task_form_to_edit_id %}
+                    <div class="main_help">
+                        <div class="help">
+                            <p class="task_help">{{help|safe}}</p>
+                        </div>
+
+                        <form name='task_form_to_edit' class='task_form_to_edit' id='task_form_to_edit' action='' method='post' enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{task_form_to_edit|safe}}
+                            <input type="submit" value="Run Task">
+                            <label for="file-upload">Choose File:</label>
+                            <input type="file" id="file-upload" name="filename">
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="task_card step">
+                        
+                        <div class="step-number">{{task.task_project_order}}</div>
+                        <div class="step-content">
+                            <div class="task_card_left">
+                                <h3 class="task_name"> {{task.task_project_order}}. {{project_to_build.project_name}}</h3>
+                                <p> {{task.user_prompt}} </p>
+
+                                <div class="tags">
+                                    {% if task.bot_personality__personality_name %}
+                                        <span class="tag">personality - {{task.bot_personality__personality_name|safe}}</span>
+                                    {% endif %}
+                                    
+                                    {% if task.bot_function__connection_function_name %}
+                                        <span class="tag">function - {{task.bot_function__connection_function_name|safe}}</span>
+                                    {% endif %}
+                                    {% if task.bot_saved_input__input_value_description %}
+                                        <span class="tag">input_date - {{task.bot_saved_input__input_value_description|safe}}</span>
+                                    {% endif %}
+                                    {% if task.bot_local_function__local_function_name %}
+                                        <span class="tag">function - {{task.bot_local_function__local_function_name|safe}}</span>
+                                    {% endif %}
+
+                                    {% if task.bot_tool %}
+                                        <span class="tag">tools - {{task.bot_tool|safe}}</span>
+                                    {% endif %}
+
+                                    {% if list_of_tasks_attach %}
+                                        {% for task_attach in list_of_tasks_attach %}
+                                            {% if task_attach.attachemnet_task_id == task.id %}
+                                                <span class="tag">{{task_attach.attachemnet|safe}}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    {% if list_of_tasks_status %}
+                                        {% for task_status in list_of_tasks_status %}
+                                            {% if task_status.task_observed_id == task.id %}
+
+                                                {{task_status|safe}}
+
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+
+                                    {% if list_of_tasks_relationship %}
+                                        {% for task_rel in list_of_tasks_relationship %}
+                                            {% if task_rel.main_task_id == task.id%}
+                                                <span class="tag">{{task_rel.task_relationship|safe}} - {{task_rel.second_task_id|safe}}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            
+                            {% if task.model_response %}
+                                <div class="task_card_right">
+                                    {% for i_rsp in task_response %}
+                                        {% if i_rsp.id == task.id %}
+                                            {{ i_rsp.response|escape }}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+
+</div>
+{% endblock %}

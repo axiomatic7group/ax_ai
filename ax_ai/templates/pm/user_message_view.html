@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+
+
+
+
+{% block content %}
+<div class="user_dashboard">
+    <div class="user_dashboard_header">
+        <h2 class="user_dashboard_link"> Welcome <a href="#"> {{ user | safe }}</a> ! </h2>
+
+        <div class="project_add_buttons">
+            <button class="project_a_buttons btn"> <a href="/cadence/create_project/" class="project_a_buttons"> + Project </a> </button>
+            <button class="project_a_buttons btn"> <a href="/cadence/create_deliverable/" class="project_a_buttons">  + Deliverable </a> </button>
+            <button class="project_a_buttons btn"> <a href="/cadence/create_tasks/" class="project_a_buttons"> + Task </a> </button>
+        </div>
+
+    </div>
+
+    {% if task_to_return %}
+    {% for main_task in task_to_return %}
+
+        <div class="main_task">
+            <!-- start of main task body -->
+            <div class="main_task_main_body">
+                <!-- start of main task body header -->
+                <div class="main_task_main_body_header">
+                    <h1> {{main_task.task_name|safe}} </h1>
+                    <h6> {{main_task.task_description|safe}} </h6>
+                </div>
+                <!-- end of main task body header -->
+                <!-- start of main task body comments -->
+                <div class="main_task_main_body_comments">
+                    {% if task_comments_to_return %}
+                        <h6>Comments:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for comments in task_comments_to_return %}
+                                <li class="list-group-item">{{comments.task_comment_type}}: {{comments.comment}}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if task_comment_form %}
+                        <form method='post' action = "/cadence/task_comments/{{project_name}}/{{main_task.id}}/" class="submit_comment_button" name="submit_comment_button">
+                            {% csrf_token %} {{task_comment_form.as_p|safe}}
+                            <input type="submit" value=">" class="submit_comment_button">   
+                        </form>
+                    {% endif %}
+                </div>
+                <!-- end of main task body comments -->
+            </div>
+            <!-- end of main task body -->
+            
+            <!-- start of main task side status -->
+            <div class="main_task_side_status">
+                <!-- start of main task side status header -->
+                <div class="main_task_side_status_header">
+                    <div>
+                        <form method='post' action = "/cadence/delete_tasks/{{main_task.id}}/" class="delete_complete_tasks_button" name="delete_complete_tasks_button">
+                            {% csrf_token %} <input type="submit" value=" Delete " class="delete_complete_tasks_button">   
+                        </form>
+                    </div>
+                </div>
+
+                <!-- end of main task side status header -->
+                <div class="main_task_side_status_attachements">
+                    {% if task_attachement_form %}
+                        <form method='post' action = "/cadence/task_attachements/{{project_name}}/{{main_task.id}}/" enctype="multipart/form-data" class="submit_attachement_button" name="submit_attachement_button">
+                            {% csrf_token %} {{task_attachement_form.as_p|safe}}
+                            <label for="file-upload">Add Attachemnets > </label>
+                            <input type="file" id="file-upload" name="filename">
+                            <input type="submit" value=">" class="submit_attachement_button">   
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- end of main task side status -->
+        </div>
+        {% endfor%}
+        {% else%}  {% endif %}
+
+    <div class="user_message_body">
+        <div class="sender_list">
+            {% for send in list_of_sender %}
+            
+                {% if send.value == "" %}
+                <a href="/cadence/user_message_view/system" class="chat_button">
+                    system
+                {% else %}
+                <a href="/cadence/user_message_view/{{send.id}}" class="chat_button">
+                    {{send.value|safe}}
+                {% endif %}
+            </a>
+            {%endfor%}
+        </div>
+
+        <div class="user_messages">
+            <div class="messages_to_show">
+                {%for messg in messages_to_show%}
+                    {% if messg.message_sender == message_sender%}
+                        <div class="message sender">
+                    {% else %}
+                        <div class="message user">
+                    {% endif %}
+                            <p>{{messg.message|safe}}</p>
+                            <date>{{messg.date_created|safe}}</date>
+                        
+                        </div>
+                {% endfor %}
+            </div>
+        
+
+            <div class="form_div_chat" >
+                <form name='add_user_messages_form' id='add_user_messages_form' action='/cadence/user_message_view/{{message_sender}}' method='post'>
+                    {% csrf_token %}
+
+                    {{add_user_messages_form.as_p|safe}}
+
+                    <input type="submit" value="Send Message">
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

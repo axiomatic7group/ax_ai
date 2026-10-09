@@ -1,0 +1,336 @@
+:root {
+    --bg-dark: oklch(0.1 0.075 255);
+    --bg: oklch(0.15 0.075 255);
+    --bg-light: oklch(0.2 0.075 255);
+    --text: oklch(0.96 0.1 255);
+    --text-muted: oklch(0.76 0.1 255);
+    --highlight: oklch(0.5 0.15 255);
+    --border: oklch(0.4 0.15 255);
+    --border-muted: oklch(0.3 0.15 255);
+    --primary: oklch(0.76 0.15 255);
+    --secondary: oklch(0.76 0.15 75);
+    --danger: oklch(0.7 0.15 30);
+    --warning: oklch(0.7 0.15 100);
+    --success: oklch(0.7 0.15 160);
+    --info: oklch(0.7 0.15 260);
+
+
+    --lg-bg-dark: oklch(0.92 0.075 255);
+    --lg-bg: oklch(0.96 0.075 255);
+    --lg-bg-light: oklch(1 0.075 255);
+    --lg-text: oklch(0.15 0.15 255);
+    --lg-text-muted: oklch(0.4 0.15 255);
+    --lg-highlight: oklch(1 0.15 255);
+    --lg-border: oklch(0.6 0.15 255);
+    --lg-border-muted: oklch(0.7 0.15 255);
+    --lg-primary: oklch(0.4 0.15 255);
+    --lg-secondary: oklch(0.4 0.15 75);
+    --lg-danger: oklch(0.5 0.15 30);
+    --lg-warning: oklch(0.5 0.15 100);
+    --lg-success: oklch(0.5 0.15 160);
+    --lg-info: oklch(0.5 0.15 260);
+}
+
+
+body {
+    font-family: 'Lucida Consosle', monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-flow: column;
+    justify-content: space-between;
+    min-height: 65rem;
+}
+
+nav a {
+    font-family: 'Lucida Consosle', monospace !important;
+    color: var(--text) !important;
+}
+
+nav.navbar-expand-md {
+    border-bottom-style: solid;
+    border-bottom-width: thin;
+    border-bottom-color: var(--border-muted);
+    background: linear-gradient(0deg, var(--bg) 0%, var(--bg-dark) 100%) !important;
+}
+
+nav.navbar-dark {
+    border-top-style: solid;
+    border-top-width: thin;
+    border-top-color: var(--bg-light);
+    background-color: var(--bg-dark) !important;
+}
+
+nav .dropdown-menu.show {
+    background: linear-gradient(0deg, var(--bg) 0%, var(--bg-dark) 100%) !important;
+    border-style: solid;
+    border-width: thin;
+    border-color: var(--border-muted);
+    border-radius: 5px;
+}
+
+nav .dropdown-menu.show a:hover {
+    background: linear-gradient(0deg, var(--bg-light) 0%, var(--bg-dark) 100%) !important;
+}
+
+.btn-outline-success {
+    background: linear-gradient(0deg, var(--bg) 0%, var(--bg-light) 100%) !important;
+    border-style: solid;
+    border-width: thin;
+    border-color: var(--border);
+    border-radius: 5px;
+    color: var(--text);
+}
+
+.btn-outline-success:hover {
+    background: linear-gradient(0deg, var(--bg) 0%, var(--bg-light) 100%) !important;
+    border-style: solid;
+    border-width: thin;
+    border-color: var(--highlight);
+    border-radius: 5px;
+    color: var(--text);
+}
+
+.form_div form {
+    max-width: fit-content !important;
+}
+
+.form_div {
+    width: 100%;
+}
+
+
+form input[type='submit'] {
+    color: var(--text);
+    background: linear-gradient(0deg, var(--bg) 0%, var(--bg-light) 100%) !important;
+    border: 3px solid var(--highlight);
+    padding: 0.5rem 1.5rem;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+form input[type='submit']:hover {
+    color: var(--text-muted);
+    background-color: var(--bg-light);
+    border: 3px solid var(--border);
+    padding: 0.5rem 1.5rem;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+form input[type='search'] {
+    color: var(--text-muted);
+    background-color: var(--bg-light);
+    background-clip: padding-box;
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+form input[type='search']:hover {
+    color: var(--text);
+    background-color: var(--bg-light);
+    background-clip: padding-box;
+    border: 1px solid var(--highlight);
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+form input[type='text'] {
+    color: var(--text-muted);
+    background-color: var(--bg-light);
+    background-clip: padding-box;
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+}
+
+form input[type='text']:hover {
+    color: var(--text);
+    background-color: var(--bg-light);
+    background-clip: padding-box;
+    border: 1px solid var(--highlight);
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+}
+
+form select {
+    color: var(--text-muted);
+    background-color: var(--bg-light);
+    background-clip: padding-box;
+    border: 1px solid var(--border);
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+form select:hover {
+    color: var(--text);
+    background-color: var(--bg-light);
+    background-clip: padding-box;
+    border: 1px solid var(--highlight);
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.footer_nav {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1rem;
+}
+
+.main_content {
+    padding: 2rem 1rem;
+}
+
+form p {
+    display: flex;
+    flex-flow: column;
+}
+
+.output_user_dict_key .card {
+    background: linear-gradient(0deg, var(--bg-dark) 0%, var(--bg) 100%) !important;
+    border-color: var(--border) !important;
+    margin: 0.5rem;
+}
+
+.funct_mgmt {
+    display: flex;
+    flex-flow: wrap;
+}
+
+.function_df {
+    width: 35%;
+    display: flex;
+    flex-flow: column;
+}
+
+.output_user_dict_key {
+    width: 60%;
+    display: flex;
+    flex-wrap: wrap;
+
+}
+
+.function {
+    padding: 1rem 0.5rem;
+    display: flex;
+    flex-flow: column;
+    border-style: solid;
+    border-width: thin;
+    margin: 0.25rem 0;
+    border-radius: 4px;
+    border-color: var(--border);
+    background: var(--bg-dark);
+}
+
+.function:target {
+    padding: 1rem 0.5rem;
+    display: flex;
+    flex-flow: column;
+    border-style: solid;
+    border-width: medium;
+    margin: 0.25rem 0;
+    border-radius: 4px;
+    border-color: var(--border);
+    background: var(--bg-light);
+}
+
+.function label {
+    color: var(--text-muted);
+}
+
+.function p {
+    margin-top: 1rem;
+    color: var(--text);
+    font-weight: bold;
+    border-bottom-style: solid;
+    border-bottom-width: thin;
+    border-bottom-color: var(--border);
+}
+
+.temp_output {
+    display: flex;
+    background: linear-gradient(0deg, var(--bg-dark) 0%, var(--bg-light) 100%) !important;
+    border-style: solid;
+    border-width: thin;
+    border-radius: 6px;
+    border-color: var(--border);
+    justify-content: center;
+    margin-top: 2%;
+    width: 100%;
+}
+
+.temp_output table {
+    border: none;
+    width: 100%;
+    margin: 1rem;
+}
+
+.temp_output th {
+    text-align: center;
+}
+
+.temp_output thead {
+    border-bottom-style: solid;
+    border-bottom-width: thin;
+    border-bottom-color: var(--border);
+}
+
+.main_content {
+    display: flex;
+  flex-flow: wrap;
+}
+
+.card-text {
+    color: var(--text-muted);
+    font-size: small;
+}
+
+.card-link {
+    text-decoration: none !important;
+    font-weight: bold;
+}
+
+.card-subtitle {
+    color: var(--text);
+    margin: 0.5rem 0;
+}
+
+.card-title {
+    font-weight: bold;
+}
+
+@media screen and (max-width: 600px) {
+
+    .function_df {
+    width: 100%;
+    display: flex;
+    flex-flow: column;
+
+}
+
+.output_user_dict_key {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+
+}
+
+.main_content {
+    display: flex;
+  flex-flow: wrap-reverse;
+}
+
+body {
+    font-family: 'Lucida Consosle', monospace;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-flow: column;
+    justify-content: space-between;
+    min-height: 40rem;
+}
+
+}

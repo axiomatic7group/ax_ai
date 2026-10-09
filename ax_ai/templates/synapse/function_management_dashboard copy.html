@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="main_content_synapse">
+<div class="funct_mgmt">
+    <div class="function_df">
+        
+        {% for i_func in function_list %}              
+        {% if i_func.info.connection_function_name %}
+            <div class="func_card">  
+                <form name='function_management_dashboard_form' class="dashboard_form" id='function_management_dashboard_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    <input type="hidden" name="function_name" value="{{i_func.info.connection_function_name}}">
+                    <p class="function_name_label"> Source: {{i_func.info.connection_function_name|safe}}</p>
+        {% else %}
+            <div class="func_card local_form">  
+                <form name='function_management_dashboard_form local_form' class="dashboard_form" id='function_management_dashboard_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    <input type="hidden" id="local_function_name" name="local_function_name" value="{{ i_func.info.local_function_name }}">     
+                    <p class="function_name_label local"> Local: {{i_func.info.local_function_name|safe}}</p>
+        {% endif %} 
+                    {% for key, value in  i_func.info.function_input_values_schema.items %}
+                        {% if value %}
+                            <div class="form_input_value">
+                                <label for="{{ key }}">{{ key }}:</label><br>
+                                <input type="text" id="value-{{ key }}" name="__input__{{ key }}__">
+                            </div>                        
+                        {% endif %}
+                    {% endfor %}
+                    <input type="submit" value="See Data">
+                </form>
+            
+                <div class="table_dict_items">
+                    {% for dict_item in i_func.table_dict %}
+                        <div class="dict_item" >
+                            <p>column <span class="highlight dynamic-target" data-id="item-{{dict_item.dictionary_table_key}}">{{dict_item.data_value_column|safe}}</span> 
+                                connects to - <a href="#item-{{dict_item.dictionary_table_key}}">{{dict_item.dictionary_table_key|safe}}</a> </p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+        {% endfor %}
+    
+    </div>
+
+    <div class="output_user_dict_key" >
+        {% for data_dict in data_dictionary_list %}
+            <div class="data_dict_card">
+                <h3 class="data_dict_title">Dataset: {{data_dict.info.datatable_group|safe}} </h3>
+                {% for i_dict_item in data_dict.dict_key %}
+                    <section data-id="item-{{i_dict_item.info.unique_key}}" class="dynamic-target">
+                        <h5 class="dict_key" >Key:{{i_dict_item.info.unique_key|safe}}</h5>
+                        <p>{{i_dict_item.info.unique_key_desc|safe}}</p>
+                        
+                        {% if i_dict_item.saved_inputs%}
+                            <div class="dropdown">
+                                <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Saved Inputs
+                                </button>
+                                <ul class="dropdown-menu">
+                                    {% for i_saved_input in i_dict_item.saved_inputs %}
+                                        <li><a class="dropdown_item" href="#">{{i_saved_input.input_value|safe}}</a></li>
+                                    {% endfor %}                                   
+                                </ul>
+                            </div>
+                        {% endif %}
+                        </section>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="second_main">
+    <div class="ai_message_form">
+
+        {% if task_response %}
+            <div class="task_results">
+                {{task_response|safe}}
+            </div>
+        {% endif %}
+
+        <div class="message_forms">
+            <div class="tab-container">
+                <button class="tab-button active" onclick="openTab(event, 'tab1')">Saved Inputs</button>
+                <button class="tab-button" onclick="openTab(event, 'tab2')">Data Connection</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab1" class="tab-content active">
+                <form name='add_axiom_bot_message_saved_input_form' id='add_axiom_bot_message_saved_input_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    {{add_axiom_bot_message_saved_input.as_p|safe}}
+                    <input type="submit" value="Ask AI">                     
+                </form>
+            </div>
+
+            <div id="tab2" class="tab-content">
+                <form name='add_axiom_bot_message_connection_func_form' id='add_axiom_bot_message_connection_func_form' action='/synapse/function_management_dashboard/' method='post'>
+                    {% csrf_token %}
+                    {{add_axiom_bot_message_connection_func.as_p|safe}}
+                    <input type="submit" value="Ask AI">                     
+                </form>
+            </div>
+        </div>
+    </div>
+        
+    
+    {% if temp_output.temp_data %}
+        <div class='temp_output'>
+            {{temp_output.temp_data|safe}}
+        </div>
+    {% else %}
+        <div class='temp_output'>
+            {{temp_output|safe}}
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function openTab(evt, tabId) {
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+
+<script>
+    function checkUrlHash() {
+    // Get the current hash from URL (e.g., "#item-101" becomes "item-101")
+    const currentHash = window.location.hash.substring(1); 
+    
+    // First, reset all items to default color
+    document.querySelectorAll('.dynamic-target').forEach(el => {
+        el.style.color = 'var(--highlight)';
+    });
+
+    // Find all items matching the dynamic ID and change their color
+    if (currentHash) {
+        document.querySelectorAll(`.dynamic-target[data-id="${currentHash}"]`).forEach(el => {
+        el.style.color = 'var(--brand-primary)';
+        });
+    }
+    }
+
+    // Run when the page loads AND whenever the URL hash changes
+    window.addEventListener('load', checkUrlHash);
+    window.addEventListener('hashchange', checkUrlHash);
+
+
+</script>
+
+</div>
+{% endblock %}

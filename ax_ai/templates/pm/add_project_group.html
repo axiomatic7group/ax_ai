@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form_div" >
+    <form name='add_project_group_form' id='add_project_group_form' action='/cadence/add_project_group/' method='post'>
+        {% csrf_token %}
+
+        {{add_project_group_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="internal_doc_info" >
+    <div class="document_top_buttons">
+        <form name="summarize_doc" id="summarize_doc" action="" method="post">
+            <input type="hidden" name="summarize_doc" value="summarize_doc" />
+            {% csrf_token %}
+            <input type="submit" value="Summarize Doc">
+        </form>
+
+        <form name="download_doc" id="download_doc" action="" method="post">
+            <input type="hidden" value="download_doc" name="download_doc" />
+            {% csrf_token %}
+            <input type="submit" value="Download Doc">
+        </form>
+
+        <form name="delete_doc" id="delete_doc" action="" method="post">
+            <input type="hidden" value="delete_doc" name="delete_doc" />
+            {% csrf_token %}
+            <input type="submit" value="Delete Doc">
+        </form>
+    </div>
+
+
+
+    <div class="document_objects">
+        <p>Document Objects:</p>
+        {% if proj_user_chat %}
+            {% for temp_chat in proj_user_chat %}
+                <a href='/daemon/model_chat_messages/{{temp_chat.id}}' target="_blank">{{temp_chat.chat_title}} - Chat </a>
+            {% endfor %}
+        {% endif %}
+
+        {% if proj_user_infos %}
+            {% for temp_user_info in proj_user_infos %}
+                <a href='/cadence/user_message_view/{{temp_user_info.user_id}}' target="_blank">{{temp_user_info.last_name}}, {{temp_user_info.first_name}} - Stakeholder </a>
+            {% endfor %}
+        {% endif %}
+
+        {% if proj_ax_projects %}
+            {% for temp_ax_projects in proj_ax_projects %}
+                <a href='/axiom/run_project_template/{{temp_ax_projects.project_name_url}}' target="_blank">{{temp_ax_projects.project_name}} - Ax Project </a>
+            {% endfor %}
+        {% endif %}
+
+        {% if proj_pm_project %}
+            {% for temp_pm_projects in proj_pm_project %}
+                <a href='/cadence/projects/{{temp_pm_projects.project_name_url}}' target="_blank">{{temp_pm_projects.project_name}} - Ax Project </a>
+            {% endfor %}
+        {% endif %}
+
+    </div>
+
+</div>
+
+<div class="new_doc_version" >
+    <form name='new_document_version_form' id='new_document_version_form' action='' method='post'>
+        <input type="submit" value="Create New Version">
+
+        {% csrf_token %}
+
+        {{new_document_version_form.as_p|safe}}
+
+        
+
+    </form>
+</div>
+{% endblock %}

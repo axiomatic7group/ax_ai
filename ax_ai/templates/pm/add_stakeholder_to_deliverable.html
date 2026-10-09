@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="form_div" >
+    <form name='add_stakeholder_to_deliverable_form' id='add_stakeholder_to_deliverable_form' action='/cadence/add_stakeholder_to_deliverable/' method='post'>
+        {% csrf_token %}
+
+        {{add_stakeholder_to_deliverable_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

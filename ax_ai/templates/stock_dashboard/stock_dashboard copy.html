@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="message_forms">
+
+    <div class="tab-container">
+        {% for data in all_links_data %}
+            {% if "vs" in data.period_ended %}
+                <button class="tab-button active" onclick="openTab(event, 'tab-{{data.period_ended}}')">{{data.period_ended}}</button>
+            {% else %}
+                <button class="tab-button" onclick="openTab(event, 'tab-{{data.period_ended}}')">{{data.period_ended}}</button>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% for data in all_links_data %}
+    {% if "vs" in data.period_ended %}
+    <div id="tab-{{data.period_ended}}" class="tab-content active">
+    {% else %}
+     <div id="tab-{{data.period_ended}}" class="tab-content">
+    {% endif %}
+        <div class="business_description">
+            <p class="data_date">{{data.period_ended|safe}}</p>
+            <p class="business_description">{{data.business_description|safe}}</p>
+        </div>
+    </div>
+        
+    {% endfor %}
+</div>
+
+<div class="links">
+    {{links|safe}}
+</div>
+
+
+
+<script>
+    function openTab(evt, tabId) {
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+
+{% endblock %}
+
+

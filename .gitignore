@@ -1,0 +1,8 @@
+.venv
+.env
+.sqlite3
+.db
+migrations
+__pycache__
+/z_old
+00_services

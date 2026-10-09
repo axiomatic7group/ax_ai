@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+    {% if task_response %}
+    <div class="task_response-financial">
+        {{task_response|safe}}
+    </div>
+    {% endif %}
+
+
+<div class="stock_summary">
+
+    <div class="tab-container top-tabs">
+        <button class="tab-button top-tab active" onclick="openTab(event, 'top-summary')">Summary</button>
+        <button class="tab-button top-tab" onclick="openTab(event, 'top-risks')">Business & Risks</button>
+        <button class="tab-button top-tab" onclick="openTab(event, 'top-financials')">Financials</button>
+        <button class="tab-button top-tab" onclick="openTab(event, 'top-fillings')">All Fillings</button>
+
+        <div class="tab-button top-tab">
+            <form name='ask_ai' id='ask_ai' action='' method='post'>
+                {% csrf_token %}
+                <textarea name="user_prompt" cols="25" rows="3" required="" id="user_prompt" style="height:3rem;" placeholder="Ask AI a question..."></textarea>
+                <select id="choices" name="choices" multiple style="height:3rem;">
+                    <option value="business">Business Overview</option>
+                    <option value="financial">Financial Summary</option>
+                    <option value="stock">Financials</option>
+                    <option value="mail">Addresses</option>
+                    <option value="former">Former Name</option>
+                </select>
+                <input type="submit" value="Ask AI">                     
+            </form>
+        </div>
+    </div>
+
+    <!-- LAYER 1 CONTENTS -->
+        <div id="top-fillings" class="tab-content top-content">
+            <div class="business_description tab-content sub-content active">
+                <h3>Filings:</h3>
+                    <div class='accordion accordion-flush'>
+                    {% for frm in links_lst %}
+                        <div class='accordion-item'>
+                        <h4 class="accordion-header" id="flush-heading{{ forloop.counter }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="flush-collapse{{ forloop.counter }}">
+                            {{frm.name|safe}}
+                            </button>
+                        </h4>
+                        <div id="flush-collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="flush-heading{{ forloop.counter }}" data-bs-parent="#accordionFlushExample">
+                            <div class="accordion-body dftable">
+                            <table class='table'>
+                                <tr>
+                                <th>Form</th>
+                                <th>Report Date</th>
+                                <th>Filing Date</th>
+                                </tr>
+                                {% for i in frm.dt %}
+                                <tr>
+                                    <td><a href={{ i.link }} target="_blank">{{ i.form }}</a></td>
+                                    <td>{{ i.reportDate }}</td>
+                                    <td>{{ i.filingDate }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+                            </div>
+                        </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+
+            </div>
+        </div>
+    
+        <!-- 1A. Summary Content -->
+        <div id="top-summary" class="tab-content top-content active">
+            <div class="business_description tab-content sub-content active">
+                <div class="ticker_card tab">
+                    <div class="company_info_div">
+                        <h4 class="card-header-text">{{name|safe}}</h4>
+                        <p class='ticker'><b>CIK: </b>{{categories.cik|safe}}</p>
+                        <p class='ticker'><b>SIC Sector: </b> {{categories.sicDescription|safe}}</p>
+                        <p class='ticker'><b>Tickers: </b> {{categories.tickers|safe}}</p>
+                        <p class='ticker'><b>Exchanges: </b> {{categories.exchanges|safe}}</p>
+                    </div>
+                    <div class="dashboard-container">
+                        <div>
+                            Financial Summary:
+                            <div>
+                                {{quick_info|safe}}
+                            </div>
+                        </div>
+                        <div class="top-class">
+                            Business Overview:
+                            <div class="sub-class">
+                                {% for data in all_links_data %}
+                                    {% if "vs" in data.period_ended %}
+                                        <div class="business-summary">
+                                            <div class="business_description">
+                                                <p class="data_date">{{data.period_ended|safe}}</p>
+                                                <p class="cutoff_summary"> {{data.business_description|safe}} </p>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div>
+                            Financials:
+                            <div class="summary-graph">
+                                {{fig_plt_summary|safe}}
+                            </div>
+
+                        </div>
+
+                        <div>
+                            <b>Addresses: </b>
+                            <table class='table'>
+                                <tr>
+                                <th></th>
+                                <th>Mailing</th>
+                                <th>Business</th>
+                                </tr>
+                                <tr>
+                                <td><b>Street</b></td>
+                                <td>{{categories.addresses.mailing.street1|safe}}</td>
+                                <td>{{categories.addresses.business.street1|safe}}</td>
+                                </tr>
+                                <tr>
+                                <td><b>City</b></td>
+                                <td>{{categories.addresses.mailing.city|safe}}</td>
+                                <td>{{categories.addresses.business.city|safe}}</td>
+                                </tr>
+                                <tr>
+                                <td><b>State/Country</b></td>
+                                <td>{{categories.addresses.mailing.stateOrCountry|safe}}</td>
+                                <td>{{categories.addresses.business.stateOrCountry|safe}}</td>
+                                </tr>
+                                <tr>
+                                <td><b>Zip Code</b></td>
+                                <td>{{categories.addresses.mailing.zipCode|safe}}</td>
+                                <td>{{categories.addresses.business.zipCode|safe}}</td>
+                                </tr>
+                                <tr>
+                                <td><b>Country/State</b></td>
+                                <td>{{categories.addresses.mailing.stateOrCountryDescription|safe}}</td>
+                                <td>{{categories.addresses.business.stateOrCountryDescription|safe}}</td>
+                                </tr>
+                            </table>  
+                        </div>
+                    
+                        {% if categories.formerNames %}
+                        <div>
+                            Former Names:
+                            <table class='table'>
+                            <tr>
+                                <th>name</th>
+                                <th>from</th>
+                                <th>to</th>
+                            </tr>
+                            
+                            {% for i in categories.formerNames %}
+                            <tr>
+                                <td>{{i.name}}</td>
+                                <td class='date'>{{i.from}}</td>
+                                <td class='date'>{{i.to}}</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            </table> 
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1B. Risks Content -->
+        <div id="top-risks" class="tab-content top-content">
+            
+            <!-- LAYER 2: Risks Sub-Tabs -->
+            <div class="tab-container sub-tabs">
+                <button class="tab-button sub-tab active" onclick="openTab(event, 'business-description')">Business Description</button>
+                <button class="tab-button sub-tab" onclick="openTab(event, 'risks')">Risks</button>
+                <button class="tab-button sub-tab" onclick="openTab(event, 'financial-notes')">Financial Notes</button>
+            </div>
+
+            <!-- LAYER 2 CONTENTS (RISKS) -->
+            <div id="business-description" class="tab-content sub-content active">
+                
+                <div class="message_forms">
+                    <div class="tab-container date-tabs">
+                        {% for data in all_links_data %}
+                            {% if "vs" in data.period_ended %}
+                                <button class="tab-button date-tab active" onclick="openTab(event, 'desc-{{data.period_ended}}')">{{data.period_ended}}</button>
+                            {% else %}
+                                <button class="tab-button date-tab" onclick="openTab(event, 'desc-{{data.period_ended}}')">{{data.period_ended}}</button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% for data in all_links_data %}
+                        {% if "vs" in data.period_ended %}
+                            <div id="desc-{{data.period_ended}}" class="tab-content date-content active">
+                        {% else %}
+                            <div id="desc-{{data.period_ended}}" class="tab-content date-content">
+                        {% endif %}
+                                <div class="business_description">
+                                    <p class="data_date">{{data.period_ended|safe}}</p>
+                                    {{data.business_description|safe}}
+                                </div>
+                            </div>
+                    {% endfor %}
+                </div>
+                
+            
+            </div>
+
+            <div id="risks" class="tab-content sub-content">
+                <div class="message_forms">
+                    <div class="tab-container date-tabs">
+                        {% for data in all_links_data %}
+                            {% if "vs" in data.period_ended %}
+                                <button class="tab-button date-tab active" onclick="openTab(event, 'risk-{{data.period_ended}}')">{{data.period_ended}}</button>
+                            {% else %}
+                                <button class="tab-button date-tab" onclick="openTab(event, 'risk-{{data.period_ended}}')">{{data.period_ended}}</button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% for data in all_links_data %}
+                        {% if "vs" in data.period_ended %}
+                            <div id="risk-{{data.period_ended}}" class="tab-content date-content active">
+                        {% else %}
+                            <div id="risk-{{data.period_ended}}" class="tab-content date-content">
+                        {% endif %}
+                                <div class="business_risks">
+                                    <p class="data_date">{{data.period_ended|safe}}</p>
+                                    {{data.risk_factors|safe}}
+                                </div>
+                            </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div id="financial-notes" class="tab-content sub-content">
+                <div class="message_forms">
+                    <div class="tab-container date-tabs">
+                        {% for data in all_links_data %}
+                            {% if "vs" in data.period_ended %}
+                                <button class="tab-button date-tab active" onclick="openTab(event, 'note-{{data.period_ended}}')">{{data.period_ended}}</button>
+                            {% else %}
+                                <button class="tab-button date-tab" onclick="openTab(event, 'note-{{data.period_ended}}')">{{data.period_ended}}</button>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% for data in all_links_data %}
+                        {% if "vs" in data.period_ended %}
+                            <div id="note-{{data.period_ended}}" class="tab-content date-content active">
+                        {% else %}
+                            <div id="note-{{data.period_ended}}" class="tab-content date-content">
+                        {% endif %}
+                                <div class="financial_notes">
+                                    <p class="data_date">{{data.period_ended|safe}}</p>
+                                    {{data.financial_notes|safe}}
+                                </div>
+                            </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 1C. Financials Content -->
+        <div id="top-financials" class="tab-content top-content">
+            <!-- LAYER 2: Financials Sub-Tabs -->
+            <div class="tab-container sub-tabs">
+                <button class="tab-button sub-tab active" onclick="openTab(event, 'fin-income')">Charts</button>
+                <button class="tab-button sub-tab" onclick="openTab(event, 'fin-balance')">Financial Results</button>
+            </div>
+
+            <!-- LAYER 2 CONTENTS (FINANCIALS) -->
+            <div id="fin-income" class="tab-content sub-content active">
+                <div style="display:flex; justify-content:space-around">
+                    <p>Current Price: {{high_low_52w.close|safe}} ({{high_low_52w.open_to_close|safe}}%) ({{high_low_52w.date|safe}} vs. previous day) </p>
+                    <p class="success">52 Week High: {{high_low_52w.high|safe}} ({{high_low_52w.high_to_close|safe}}%) </p>
+                    <p class="warning">52 Week Low: {{high_low_52w.low|safe}} ({{high_low_52w.low_to_close|safe}}%) </p>
+                </div>
+                <!-- LAYER 3: Income Statement Date Tabs -->
+                <div class="tab-container date-tabs">
+                    <button class="tab-button date-tab active" onclick="openTab(event, 'inc-q1')">Stock Chart</button>
+                    <button class="tab-button date-tab" onclick="openTab(event, 'inc-q2')">Financial Chart</button>
+                </div>
+
+                <div id="inc-q1" class="tab-content date-content active">
+                    <div class="plt_cardclass ticker_card tab">
+                        
+                        <div style="height:450pt">
+                            {{price_plt|safe}}
+                        </div>
+                    </div>
+                </div>
+                <div id="inc-q2" class="tab-content date-content">
+                    <div class="ticker_card tab">
+                        <div>
+                            {{fig_plt|safe}}
+
+                            <form id="fig_plt_option" class="fig_plt_option" method="post" enctype="multipart/form-data" action="/data_view/{{ticker}}/">
+                                {% csrf_token %}
+                                <select id="fig_plt_option" form="fig_plt_option" name="fig_plt_option" class="multiselect-group" multiple >
+                                    <optgroup >
+                                    {% for i in raw_data_list %}
+                                        <option value="{{i}}" >
+                                            {{i}}
+                                        </option>
+                                    {% endfor %}
+                                    </optgroup>
+                                </select>
+                                <input type="submit" value="view">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fin-balance" class="tab-content sub-content">
+                <!-- LAYER 3: Balance Sheet Date Tabs -->
+                <div class="tab-container date-tabs">
+                    <button class="tab-button date-tab" onclick="openTab(event, 'bal-q1')">Per Share</button>
+                    <button class="tab-button date-tab" onclick="openTab(event, 'bal-q2')">Income Statement</button>
+                    <button class="tab-button date-tab" onclick="openTab(event, 'bal-q3')">Balance Sheet</button>
+                    <button class="tab-button date-tab" onclick="openTab(event, 'bal-q4')">Cash Flow</button>
+                    <button class="tab-button date-tab" onclick="openTab(event, 'bal-q5')">Common Shares</button>
+                    <button class="tab-button date-tab active" onclick="openTab(event, 'bal-q6')">All 10-K Data</button>
+                </div>
+                <div id="bal-q1" class="tab-content date-content"> {{perShare|safe}} </div>
+                <div id="bal-q2" class="tab-content date-content"> {{incomeStatement|safe}} </div>
+                <div id="bal-q3" class="tab-content date-content"> {{balanceSheet|safe}} </div>
+                <div id="bal-q4" class="tab-content date-content"> {{cashFlow|safe}} </div>
+                <div id="bal-q5" class="tab-content date-content"> {{commonShareouts|safe}} </div>
+                <div id="bal-q6" class="tab-content date-content active"> 
+                    <div class="accordion-body dftable">
+                        <input type="text" id="data_value" placeholder="Search for table data..">
+                        {{rawData|safe}}
+                        <script>
+                        $('#data_value').keyup(function () {
+                            let value = $(this).val().toLowerCase();
+                            $("#raw_data tr").filter(function () {
+                                $(this).text()
+                                .toLowerCase().indexOf(value) > -1 ? $(this).show() :
+                                $(this).hide()
+                            });
+                            $('#raw_data tr:first').show();
+                        });
+                        </script>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+</div>
+
+
+
+<script>
+    document.querySelectorAll('td').forEach(cell => {
+    const text = cell.textContent;
+
+    // 1. Check if the cell text contains both '-' and '%'
+    if (text.includes('-') && text.includes('%')) {
+        cell.classList.add('negative-percentage');
+    } 
+    // 2. Check if it contains '%' but does NOT contain '-'
+    else if (text.includes('%') && !text.includes('-')) {
+        cell.classList.add('positive-percentage');
+    }
+    });
+</script>
+
+<script>
+    function openTab(evt, tabId) {
+        // 1. Get the clicked button and its parent container
+        const clickedButton = evt.currentTarget;
+        const buttonContainer = clickedButton.parentElement;
+
+        // 2. Only deactivate buttons inside this specific container
+        const siblingButtons = buttonContainer.querySelectorAll('.tab-button');
+        siblingButtons.forEach(btn => btn.classList.remove('active'));
+
+        // 3. Find the target content element
+        const targetContent = document.getElementById(tabId);
+        if (!targetContent) return;
+
+        // 4. Deactivate only the content siblings at the same layer level
+        const contentContainer = targetContent.parentElement;
+        
+        // Determine class selector based on what type of tab was clicked
+        let contentClass = '.top-content';
+        if (clickedButton.classList.contains('sub-tab')) contentClass = '.sub-content';
+        if (clickedButton.classList.contains('date-tab')) contentClass = '.date-content';
+
+        const siblingContents = contentContainer.querySelectorAll(contentClass);
+        siblingContents.forEach(content => content.classList.remove('active'));
+
+        // 5. Activate clicked button and matching content window
+        clickedButton.classList.add('active');
+        targetContent.classList.add('active');
+    }
+</script>
+
+{% endblock %}

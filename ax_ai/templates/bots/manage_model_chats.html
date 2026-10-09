@@ -1,0 +1,185 @@
+{% extends "base_sidebar.html" %}
+
+{% block tab_header_content %}
+
+<div class="project_top_buttons">
+
+    <div class="summarize_chat_button">
+        <form name="summarize_chat_messages" id="summarize_chat_messages" action="/axiom/manage_document_version/user_chat_summary__chat_id__{{model_chats_id}}" method='get'>
+            <input type="submit" value="Chat Summary">
+        </form>
+    </div>
+
+    <div class="summarize_chat_button">
+        <form name="summarize_chat_messages" id="summarize_chat_messages" action="/daemon/summarize_chat_messages/{{model_chats_id}}/" method='post'>
+            {% csrf_token %}
+            <input type="submit" value="Summarize this Chat">
+        </form>
+    </div>
+
+    <form name="new_chat_message" id="new_chat_message" action="/daemon/new_model_chat/" method='get'>
+        <input type="submit" value="Start New AI Chat">
+    </form>
+</div>
+
+
+{% endblock %}
+
+{% block sidebar_content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    {% if model_chats_list %}
+        <div class="model_chat">
+            {% for model_chats in model_chats_list %}
+                <a href="/daemon/model_chat_messages/{{model_chats.id_x}}/">
+                    {% if model_chats.id_x == model_chats_id|add:"0" %}
+                        <div class="model_chat{{model_chats.id_x}} active_chat">
+
+                            <div class="model_chat{{model_chats.id_x}} ">
+                    
+                    {% else %}
+                            <div class="model_chat{{model_chats.id_x}} model_chat_child">
+                    {% endif %}
+                                <h4>  {{model_chats.chat_title}}</h4>
+                                <div class="model_chat_sidebar_info">
+                                    <p> {{model_chats.date_created_x}} </p>
+                                    <p> {{model_chats.model_name}} </p>
+                                </div>
+                            </div>
+                    {% if model_chats.id_x == model_chats_id|add:"0" %}
+                        </div>
+                    {% endif %}
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{% if completed_forms_list %}
+    <div class="plan_layout">
+        {% for forms in completed_forms_list %}
+            <div class="objectives_block">
+                <h2> {{forms.objective|safe}}</h2>
+                
+                <div class="task_list_div"> 
+                    {% for temp_task in forms.temp_dict %}
+                        <div class="task_info_div">
+                            <h4> {{temp_task.task_name|safe}}</h4>
+                            <p> {{temp_task.task_description|safe}}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <h1 style="color=var(--border); font-weight=bold; width=100%; display=flex; justify_content=center; ">&#8595;</h1>
+            </div>
+        {% endfor %}
+
+        </br>
+    </div>
+
+
+    <div class="prefilled_form_main">
+        <form class="prefilled_task_form" name='prefilled_task_form' id='prefilled_task_form' action="" method='post'>
+            <div class="submit_task_list">
+                <h4> Edit Tasks before Submitting &#8595; </h4>
+                    {% csrf_token %}            
+                    <input type="submit" value="Create Plan">
+            </div>
+            {% for forms in completed_forms_list %}
+                <div class="objectives_forms_list">
+                    <h4> {{forms.objective|safe}} </h4>
+                    
+                    <div class="objectives_forms">
+                        {% for task in forms.forms%}
+                            <div class="prefilled_task_form">
+                                {{task.form.as_p|safe}}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        </form>
+    </div>
+
+{% elif chat_messages_list %}
+    <div class="chat_messages_main">
+        
+        {% for chat_messages in chat_messages_list %}
+            {% if chat_messages.chat_sender == 'user' %}
+                <div class="chat_messages">
+                    <div class="{{chat_messages.chat_sender}}">
+                        {{chat_messages.chat_message|safe}}
+                        <h6> {{chat_messages.date_created}} </h6>
+                    </div>
+                </div>
+            {% else %}
+                <div class="chat_messages">
+            
+                    <div class="{{chat_messages.chat_sender}}">
+                        {{chat_messages.chat_message|safe}}
+
+                        <h6> {{chat_messages.date_created}} </h6>
+                        
+                        <div class="metadata">
+                            <div class="tokens">
+                                {{chat_messages.chat_meta | safe}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+<div class="form_div">
+    <form name='chat_messages_form' id='chat_messages_form' action='' method='post' enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="message_form_and_buttons">
+            <div class="chat_options_2">
+                <div class="button-group_2">
+                    <select class="personalities button-group" name="personalities">
+                        {% for i_opt in personalities %}
+                                <option value={{i_opt.id}}>{{i_opt.personality_name}}</option>
+                        {% endfor %}
+                    </select>
+                    <select class="model_agent button-group" name="model_agent">
+                        {% for i_opt in model_agent %}
+                                <option value={{i_opt.id_x}}>{{i_opt.model_base_name}} - {{i_opt.model_name}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {{chat_messages_form.as_p|safe}}
+        
+        </div>
+        <div class="chat_submit">
+            <div class="chat_options">
+                <div class="button-group">
+                    <select class="tools button-group" name="tools">
+                        
+                        {% for i_opt in tools %}
+                                <option value={{i_opt.value}}>{{i_opt.value}} - {{i_opt.icon|safe}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <label for="file-upload">Want to add a localfile?</label>
+            <input type="file" id="chat_messages_form" name="filename">
+
+            <input type="submit" value="Ask AI">
+        </div>
+    </form>
+</div>
+
+{% endif %}
+
+
+
+<script>
+    let msgbox = document.querySelector('.main_container');
+            msgbox.scrollTop = msgbox.scrollHeight;
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+<!-- calendar.html -->
+<!-- Render raw code string safely into place -->
+
+
+{% extends "base.html" %}
+{% block content %}
+    <div class="calendar-container">
+        {{ calendar_html|safe }}
+    </div>
+{% endblock %}

@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+
+<!-- Start of side bar content -->
+    {% block sidebar_content%}
+        <h4> Projects: </h4>
+        <ul class="list-group">    
+            {% for i_project in projects %}
+            <li class="list-group-item">
+                <a href="/cadence/projects/{{i_project.project_name_for_link}}/" class="sidebar_link list-group-item list-group-item-action">
+                    {{i_project.project_name}}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    {% endblock %}
+<!-- End of side bar content -->
+
+<!-- Start of main content -->
+{% block content %}
+
+<!-- Start of messages container -->
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == "success" %} <div class="alert alert-success" role="alert">
+            {% elif message.tags == "error" %} <div class="alert alert-warning" role="alert">
+            {% else %} <div class="alert alert-primary" role="alert">
+            {% endif %} {{ message }} </div>
+        {% endfor %}
+    {% endif %}
+<!-- End of messages container -->
+
+<!-- Start of project header tracker -->
+    {% if project_name %}
+        <div class='projects_header_tracker'>
+            <a href="/cadence/projects/">Projects</a> /
+            <a href="/cadence/projects/{{project_name}}/"> {{project_name}} </a> /
+            {% if task_id %}
+                {% for main_task in task_to_return %}
+                    <a href="/cadence/projects/{{project_name}}/{{main_task.id}}/"> {{main_task.task_name}} </a> /
+                {% endfor %}
+            {% endif %}
+        </div>
+    {% endif %}
+<!-- End of project header tracker -->
+
+{% if task_id %}
+<!-- start of main task -->
+
+    {% if task_to_return %}
+    {% for main_task in task_to_return %}
+
+        {% if main_task.task_status == "completed" %} <div  class="div_completed main_task ">
+        {% elif main_task.task_status == "not_started" %} <div  class="div_not_started main_task ">
+        {% elif main_task.task_status == "late" %} <div class="div_late main_task ">
+        {% elif main_task.task_status == "past_due" %} <div class="div_past_due main_task ">
+        {% else %} <div class="main_task"> {% endif %}
+            
+            <!-- start of main task body -->
+            <div class="main_task_main_body">
+                <!-- start of main task body header -->
+                <div class="main_task_main_body_header">
+                    <h1> {{main_task.task_name}} </h1>
+                    <h6> {{main_task.task_description}} </h6>
+                </div>
+                <!-- end of main task body header -->
+                <!-- start of main task body staff -->
+                <div class="main_task_main_body_staff">
+                    {% if task_staff_to_return %}
+                        <h6>Staff:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for staffs in task_staff_to_return %}
+                                <li class="list-group-item">{{staffs.last_name}}, {{staffs.first_name}}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <!-- end of main task body staff -->
+                <!-- start of main task body comments -->
+                <div class="main_task_main_body_comments">
+                    {% if task_comments_to_return %}
+                        <h6>Comments:</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for comments in task_comments_to_return %}
+                                <li class="list-group-item">{{comments.task_comment_type}}: {{comments.comment}}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                    {% if task_comment_form %}
+                        <form method='post' action = "/cadence/task_comments/{{project_name}}/{{main_task.id}}/" class="submit_comment_button" name="submit_comment_button">
+                            {% csrf_token %} {{task_comment_form.as_p|safe}}
+                            <input type="submit" value=">" class="submit_comment_button">   
+                        </form>
+                    {% endif %}
+                </div>
+                <!-- end of main task body comments -->
+                <!-- start of main task body related tasks -->
+                <div class="main_task_main_body_related_tasks">
+                    {% if task_prerequisites_to_return %}
+                        <table class="table project_task_table table-hover table-sm">
+                            <tr>
+                                <th>Task</th>
+                                <th>Soft Due Date</th>
+                                <th>Hard Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                            {% for get_tasks in task_prerequisites_to_return %}
+                                <tr {% if get_tasks.task_status == "completed" %} class="tr_completed"
+                                    {% elif get_tasks.task_status == "not_started" %} class="tr_not_started"
+                                    {% elif get_tasks.task_status == "late" %} class="tr_late"
+                                    {% elif get_tasks.task_status == "past_due" %} class="tr_past_due" {% endif %} >
+                                    <td> <a href="/cadence/projects/{{get_project.project_name_for_link}}/{{get_tasks.id}}/">{{get_tasks.task_name}}</a> </td>
+                                    <td> <time>{{get_tasks.soft_due_date}}</time> </td>
+                                    <td> <time>{{get_tasks.hard_due_date}}</time> </td>
+                                    <td> <p>{{get_tasks.task_status}}</p> </td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                </div>
+                <!-- end of main task body related tasks -->
+            </div>
+            <!-- end of main task body -->
+            
+            <!-- start of main task side status -->
+            <div class="main_task_side_status">
+                <!-- start of main task side status header -->
+                <div class="main_task_side_status_header">
+                    <div>
+                        <h3>{{main_task.task_status}}</h3>
+                        <h6>{{main_task.task_schedule}}</h6>
+                    </div>
+                    <div>
+                        {% if main_task.task_status != "completed" %}
+                            <form method='post' action = "/cadence/complete_tasks/{{main_task.id}}/" class="done_complete_tasks_button" name="done_complete_tasks_button">
+                                {% csrf_token %}
+                                <input type="submit" value=" Done " class="done_complete_tasks_button">   
+                            </form>
+                        {% endif %}
+                        <form method='post' action = "/cadence/delete_tasks/{{main_task.id}}/" class="delete_complete_tasks_button" name="delete_complete_tasks_button">
+                            {% csrf_token %} <input type="submit" value=" Delete " class="delete_complete_tasks_button">   
+                        </form>
+                    </div>
+                </div>
+                <!-- end of main task side status header -->
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Start: {{main_task.start_date}}</li>
+                    <li class="list-group-item">Soft due: {{main_task.soft_due_date}}</li>
+                    <li class="list-group-item">Hard due: {{main_task.hard_due_date}}</li>
+                </ul>
+                <div class="main_task_side_status_attachements">
+                    {% if task_attachement_form %}
+                        <form method='post' action = "/cadence/task_attachements/{{project_name}}/{{main_task.id}}/" enctype="multipart/form-data" class="submit_attachement_button" name="submit_attachement_button">
+                            {% csrf_token %} {{task_attachement_form.as_p|safe}}
+                            <label for="file-upload">Choose File</label>
+                            <input type="file" id="file-upload" name="filename">
+                            <input type="submit" value=">" class="submit_attachement_button">   
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- end of main task side status -->
+        {% endfor%}
+        {% else%} Not a valid task {% endif %}
+    </div>
+
+<!-- end of main task -->
+{% endif %}
+
+
+
+{% if get_deliverable %}
+{% for get_project in get_project %}
+<div class='projects_header_tracker'>
+    <a href="/cadence/projects/">Projects</a> /
+    <a href="/cadence/projects/{{get_project.project_name_for_link}}/"> {{get_project.project_name}} </a> /
+    <a href="/cadence/deliverables/{{get_deliverable.id}}/"> {{get_deliverable.deliverable_name}} </a> /
+</div>
+
+<div class="main_project">
+    <div class="main_project_header">
+        <div class="sub_project_header">
+            <p >{{get_project.project_description}}</p>
+
+            <a href="/cadence/projects/{{get_project.project_name_for_link}}/"> <h3>{{get_project.project_name}}</h3> </a>
+            
+            <div>    
+                
+                    <button class="project_a_buttons btn"> 
+                        <a href="/cadence/create_deliverable/" class="project_add_buttons"> + Deliverable </a>
+                    </button>
+                <button class="project_a_buttons btn" type="submit"> 
+                    <a href="/cadence/create_tasks/" class="project_add_buttons"> + Task </a>
+                </button>
+            </div>
+        </div>
+
+        <div class="sub_project_header">
+            <p >{{get_deliverable.deliverable_description}}</p>
+
+            <a href="/cadence/deliverables/{{get_deliverable.id}}/"> <h3>{{get_deliverable.deliverable_name}}</h3> </a>
+            
+            <div>    
+                
+                <button class="project_a_buttons btn" type="submit"> 
+                    <a href="/cadence/create_tasks/" class="project_add_buttons"> + Task </a>
+                </button>
+                
+                <button class="project_a_buttons btn" type="submit">
+                    <a href="/cadence/add_stakeholder_to_deliverable/" class="project_add_buttons"> + Stakeholder </a>
+                </button>
+                
+            </div>
+        </div>
+    </div>
+
+    {% if get_tasks %}
+        <div class='project_tasks_div'>
+            <table class="table project_task_table table-hover table-sm">
+                <tr>
+                    <th>Task</th>
+                    <th>Soft Due Date</th>
+                    <th>Hard Due Date</th>
+                    <th>Status</th>
+
+                </tr>
+                {% for get_tasks in projects_task %}
+                <tr {% if get_tasks.task_status == "completed" %} class="tr_completed"
+                    {% elif get_tasks.task_status == "not_started" %} class="tr_not_started"
+                    {% elif get_tasks.task_status == "late" %} class="tr_late"
+                    {% elif get_tasks.task_status == "past_due" %} class="tr_past_due" {% endif %} 
+                    >
+                    <td>
+                        <a href="/cadence/projects/{{get_project.project_name_for_link}}/{{get_tasks.id}}/">{{get_tasks.task_name}}</a>
+                    </td>
+                    <td>
+                        <time>{{get_tasks.soft_due_date}}</time>
+                    </td>
+                    <td>
+                        <time>{{get_tasks.hard_due_date}}</time>
+                    </td>
+                    <td>
+                        <p>{{get_tasks.task_status}}</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            {% if get_stakeholders %}
+                <table class="table project_task_table table-hover table-sm">
+                    <tr>
+                        <th>Name</th>
+                        <th>Organization</th>
+                        <th>Last Contact</th>
+                        <th>Contact</th>
+
+                    </tr>
+                    {% for i_stakeholder in get_stakeholders %}
+                    <tr>
+                        <td>
+                            <a href="/cadence/user_message_view/{{i_stakeholder.id}}">{{i_stakeholder.last_name_x}}, {{i_stakeholder.first_name_x}}</a>
+                        </td>
+                        <td>
+                            <p>Organization</p>
+                        </td>
+                        <td>
+                            <time>{{i_stakeholder.last_login}}</time>
+                        </td>
+                        <td>
+                            <p>{{i_stakeholder.email}}</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+
+
+
+
+{% endfor %}
+{% endif %}
+
+
+
+
+
+
+{% if project_to_return %}
+<div class="main_project">
+    {% for main_project in project_to_return %}
+    <div class="main_project_header">
+        <p>{{main_project.project_description}}</p>
+
+        <a href="/cadence/projects/{{main_project.project_name_for_link}}/"> <h3>{{main_project.project_name}}</h3> </a>
+        
+        <div class="project_add_buttons">    
+            <button class="project_a_buttons btn"><a href="/cadence/create_deliverable/" class="project_a_buttons"> + Deliverable </a> </button>
+            <button class="project_a_buttons btn"><a href="/cadence/create_tasks/" class="project_a_buttons"> + Task </a> </button>
+            <button class="project_a_buttons btn"><a href="/cadence/add_stakeholder_to_project/" class="project_a_buttons"> + Stakeholder </a> </button>
+        </div>
+
+        
+    
+    </div>
+    
+    {% if projects_task %}
+    <div class='project_tasks_div'>
+        <table class="table project_task_table table-hover table-sm">
+            <tr>
+                <th>Task</th>
+                <th>Soft Due Date</th>
+                <th>Hard Due Date</th>
+                <th>Status</th>
+
+            </tr>
+            {% for i_project_tasks in projects_task %}
+            <tr {% if i_project_tasks.task_status == "completed" %} class="tr_completed"
+                {% elif i_project_tasks.task_status == "not_started" %} class="tr_not_started"
+                {% elif i_project_tasks.task_status == "late" %} class="tr_late"
+                {% elif i_project_tasks.task_status == "past_due" %} class="tr_past_due" {% endif %} 
+                >
+                <td>
+                    <a href="/cadence/projects/{{main_project.project_name_for_link}}/{{i_project_tasks.id}}/">{{i_project_tasks.task_name}}</a>
+                </td>
+                <td>
+                    <time>{{i_project_tasks.soft_due_date}}</time>
+                </td>
+                <td>
+                    <time>{{i_project_tasks.hard_due_date}}</time>
+                </td>
+                <td>
+                    <p>{{i_project_tasks.task_status}}</p>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        {% if get_stakeholders %}
+            <table class="table project_task_table table-hover table-sm">
+                <tr>
+                    <th>Name</th>
+                    <th>Organization</th>
+                    <th>Last Contact</th>
+                    <th>Contact</th>
+
+                </tr>
+                {% for i_stakeholder in get_stakeholders %}
+                <tr>
+                    <td>
+                        <a href="/cadence/user_message_view/{{i_stakeholder.id}}">{{i_stakeholder.last_name_x}}, {{i_stakeholder.first_name_x}}</a>
+                    </td>
+                    <td>
+                        <p>Organization</p>
+                    </td>
+                    <td>
+                        <time>{{i_stakeholder.last_login}}</time>
+                    </td>
+                    <td>
+                        <p>{{i_stakeholder.email}}</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+
+        <div class="deliverables_buttons">
+            {% if project_deliverables %}
+            {% for deliverable in project_deliverables %}
+            <div >
+                <button class="btn deliverable_button_drop" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{deliverable.id}}" aria-expanded="false" aria-controls="collapse{{deliverable.id}}">
+                    {{deliverable.deliverable_name}} ^^
+                </button>
+            </div>
+
+            <div id="collapse{{deliverable.id}}" class="collapse">
+                {% if deliverables_tasks %}
+                    <div class='deliverables_taskss_div'>
+                        <table class="table deliverables_tasks_table table-hover table-sm">
+                            <tr>
+                                <th>Task</th>
+                                <th>Soft Due Date</th>
+                                <th>Hard Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                            {% for i_deliverables_tasks in deliverables_tasks %}
+                            {% if deliverables_tasks.task_deliverable_id == project_deliverables.id %}
+                            <tr {% if i_deliverables_tasks.task_status == "completed" %} class="tr_completed"
+                            {% elif i_deliverables_tasks.task_status == "not_started" %} class="tr_not_started"
+                            {% elif i_deliverables_tasks.task_status == "late" %} class="tr_late"
+                            {% elif i_deliverables_tasks.task_status == "past_due" %} class="tr_past_due" {% endif %}>
+                                <td> <a href="/cadence/projects/{{main_project.project_name_for_link}}/{{i_deliverables_tasks.id}}" >{{i_deliverables_tasks.task_name}}</a> </td>
+                                <td> <time>{{i_deliverables_tasks.soft_due_date}}</time> </td>
+                                <td> <time>{{i_deliverables_tasks.hard_due_date}}</time> </td>
+                                <td> <p>{{i_deliverables_tasks.task_status}}</p> </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            {% endif %}
+        </div>
+
+        <div class="task_forms">
+            {% if task_prerequisite_form %}
+            <form name='task_prerequisite_form' id='task_prerequisite_form' action='/cadence/add_task_prerequisite/' method='post'>
+                {% csrf_token %}
+
+                {{task_prerequisite_form.as_p|safe}}
+
+                <input type="submit" value="post">
+
+            </form>
+            {% endif %}
+            {% if task_status_list_form %}
+            <form name='task_status_list_form' id='task_status_list_form' action='/cadence/add_task_status_list/' method='post'>
+                {% csrf_token %}
+
+                {{task_status_list_form.as_p|safe}}
+
+                <input type="submit" value="post">
+
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- User Dashboard
+
+{{all_deliverables|safe}}
+{{projects_table|safe}}
+{{all_tasks_table|safe}}
+
+-->
+
+<div class="user_dashboard">
+    <div class="user_dashboard_header">
+        <h2 class="user_dashboard_link"> Welcome <a href="#">{{user}}</a> ! </h2>
+
+        <div class="project_add_buttons">
+            <button class="project_a_buttons btn"> <a href="/cadence/create_project/" class="project_a_buttons"> + Project </a> </button>
+            <button class="project_a_buttons btn"> <a href="/cadence/create_deliverable/" class="project_a_buttons">  + Deliverable </a> </button>
+            <button class="project_a_buttons btn"> <a href="/cadence/create_tasks/" class="project_a_buttons"> + Task </a> </button>
+        </div>
+
+    </div>
+
+    <div class="user_dashboard_body">
+        <div class="user_dashboard_body_tasks">
+            <div class="calendar-container">
+                {{ calendar_html|safe }}
+            </div>
+
+            {% if all_tasks %}
+                <table class="table table-hover table-sm">
+                    <tr>
+                        <th>Tasks</th>
+                        <th>Date</th>
+                        <th>Project</th>
+                    </tr>
+                    {% for i_tasks in all_tasks %}
+                        {% if i_tasks.task_status != "completed" %}
+                            <tr {% if i_tasks.task_status == "completed" %} class="tr_completed"
+                                {% elif i_tasks.task_status == "not_started" %} class="tr_not_started"
+                                {% elif i_tasks.task_status == "late" %} class="tr_late"
+                                {% elif i_tasks.task_status == "past_due" %} class="tr_past_due" {% endif %}>
+
+                                <td> <a href="/cadence/projects/{{i_tasks.task_project_name_link}}/{{i_tasks.id}}" >{{i_tasks.task_name}}</a></td>
+                                <td> <date>{{i_tasks.soft_due_date}}</date> </td>
+                                <td> <a href="/cadence/projects/{{i_tasks.task_project_name_link}}" >{{i_tasks.task_project}}</a> </td>
+                            </tr>
+
+                        {% endif %}
+                    {% endfor %}
+                </table>
+                <table class="table table-hover table-sm">
+                    <tr>
+                        <th>Tasks</th>
+                        <th>Date</th>
+                        <th>Project</th>
+                    </tr>
+                    {% for i_tasks in all_tasks %}
+                        {% if i_tasks.task_status == "completed" %}
+                            <tr {% if i_tasks.task_status == "completed" %} class="tr_completed"
+                                {% elif i_tasks.task_status == "not_started" %} class="tr_not_started"
+                                {% elif i_tasks.task_status == "late" %} class="tr_late"
+                                {% elif i_tasks.task_status == "past_due" %} class="tr_past_due" {% endif %}>
+
+                                <td> <a href="/cadence/projects/{{i_tasks.task_project_name_link}}/{{i_tasks.id}}" >{{i_tasks.task_name}}</a></td>
+                                <td> <date>{{i_tasks.soft_due_date}}</date> </td>
+                                <td> <a href="/cadence/projects/{{i_tasks.task_project_name_link}}" >{{i_tasks.task_project}}</a> </td>
+                            </tr>
+
+                        {% endif %}
+                    {% endfor %}
+                </table>
+            {% endif %}
+        </div>
+        <div class="user_dashboard_body_projects">
+            {% if projects %}
+                <table class="table table-hover table-sm">
+                    <tr>
+                        <th>Projects</th>
+                        <th>Owner</th>
+                    </tr>
+                {% for i_projects in projects%}
+                    <tr>
+                        <td> <a href="/cadence/projects/{{i_projects.project_name_for_link}}" >{{i_projects.project_name}}</a> </td>
+                        <td> <a href="/cadence/user_message_view/{{i_projects.cadence_owner_id}}" >{{i_projects.cadence_owner_id}}</a> </td>
+                    </tr>
+                {% endfor %}
+                </table>
+            {% endif %}
+            {% if all_deliverables %}
+                <table class="table table-hover table-sm">
+                    <tr>
+                        <th>Deliverable</th>
+                        <th>Project</th>
+                    </tr>
+                {% for i_delivs in all_deliverables %}
+                    <tr>
+                        <td> <a href="/cadence/deliverables/{{i_delivs.id}}" >{{i_delivs.deliverable_name}}</a> </td>
+                        <td> <a href="/cadence/projects/{{i_delivs.deliverable_project_name_link}}" >{{i_delivs.deliverable_project_id}}</a> </td>
+                    </tr>
+                {% endfor %}
+                </table>
+            {% endif %}
+
+            {% if list_of_sender%}
+                <div class="sender_list_main">
+                    <h5> Messages</h5>
+                    {% for send in list_of_sender %}
+                    
+                        {% if send.value == "" %}
+                        <a href="/cadence/user_message_view/system" class="chat_button">
+                            system
+                        {% else %}
+                        <a href="/cadence/user_message_view/{{send.id}}" class="chat_button">
+                            {{send.value|safe}}
+                        {% endif %}
+                    </a>
+                    {%endfor%}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+<!-- End of main content -->

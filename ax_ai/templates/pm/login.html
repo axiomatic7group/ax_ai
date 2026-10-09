@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="form_div" >
+    <form name='user_auth_form' id='user_auth_form' action='/login/' method='post'>
+        {% csrf_token %}
+
+        {{user_auth_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

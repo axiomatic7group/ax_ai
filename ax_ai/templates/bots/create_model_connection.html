@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="main_marketplace">
+
+    <div class="main_marketplace_tabs">
+
+        <div class="marketplace_tabs">
+            <div class="tab-container">
+                <button class="tab-button" onclick="openTab(event, 'tab1')">Marketplace</button>
+                <button class="tab-button active" onclick="openTab(event, 'tab2')">New Connections</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div id="tab1" class="tab-content">
+                <p>Marketplace coming soon...</p>
+
+            </div>
+
+            <div id="tab2" class="tab-content active">
+                <div class="model_base">
+                    <div class="connection_forms" >
+                        <p>Add Model Base</p>
+                        <form name='model_base_form' id='model_base_form' action='' method='post'>
+                            {% csrf_token %}
+
+                            {{model_base_form.as_p|safe}}
+                            <input type="submit" value="Create Model Base">
+                        </form>
+                    </div>
+                    <div class="connection_forms" >
+                        <p>Add User Connection</p>
+                        <form name='model_base_user_connection_form' id='model_base_user_connection_form' action='' method='post'>
+                            {% csrf_token %}
+
+                            {{model_base_user_connection_form.as_p|safe}}
+                            <input type="submit" value="Add User Connection">
+                        </form>
+                    </div>
+                </div>
+
+                <div class="connection_forms" >
+                    <p>Model Connection</p>
+                    <form name='model_connection_form' id='model_connection_form' action='' method='post'>
+                        {% csrf_token %}
+
+                        {{model_connection_form.as_p|safe}}
+                        <input type="submit" value="New Model Connection">
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+
+</div>
+
+<script>
+    function openTab(evt, tabId) {
+        // Hide all tab content
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        // Remove active class from all buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        // Show current tab content and add active class to clicked button
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+
+
+{% endblock %}
+
+

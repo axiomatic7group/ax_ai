@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="new_chat_form" >
+    <form name='model_personality_form' id='model_personality_form' action='' method='post'>
+        {% csrf_token %}
+
+        {{model_personality_form.as_p|safe}}
+
+        <input type="submit" value="Create New AI Personality">
+
+    </form>
+</div>
+{% endblock %}

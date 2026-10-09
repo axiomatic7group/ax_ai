@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form_div" >
+    <form name='add_user_messages_form' id='add_user_messages_form' action='/cadence/add_user_messages/' method='post'>
+        {% csrf_token %}
+
+        {{add_user_messages_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

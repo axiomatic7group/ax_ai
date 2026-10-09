@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="form_div" >
+    <form name='create_deliverable_form' id='create_deliverable_form' action='/cadence/create_deliverable/' method='post'>
+        {% csrf_token %}
+
+        {{create_deliverable_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

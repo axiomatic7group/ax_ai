@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="form_div">
+    <form name='create_connection_function_saved_inputs_form' id='create_connection_function_saved_inputs_form' action='/synapse/add_connection_function_saved_inputs/' method='post'>
+        {% csrf_token %}
+            {{create_connection_function_saved_inputs_form.as_p|safe}}
+        <input type="submit" value="post">
+    </form>
+</div>
+{% endblock %}

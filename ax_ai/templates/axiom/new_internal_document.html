@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+<div class="new_internal_doc" >
+    <form name='new_internal_document_form' id='new_internal_document_form' action='' method='post'>
+
+        <label for="user_chat">User Chats:</label>
+        <select id="user_chat" name="user_chat">
+            <option value="" disabled selected> -- </option>
+            {% for user_chat in objects_user_chat %}
+                <option value="user_chat__{{user_chat.id}}">{{user_chat.chat_title|safe}}</option>
+            {% endfor %}
+        </select>
+
+        <label for="ax_projects">Ax Project:</label>
+        <select id="ax_projects" name="ax_projects">
+            <option value="" disabled selected> -- </option>
+            {% for ax_projects in objects_axiom_projects %}
+                <option value="ax_project__{{ax_projects.project_name}}">{{ax_projects.project_name|safe}}</option>
+            {% endfor %}
+        </select>
+
+        <label for="pm_project">PM Project:</label>
+        <select id="pm_project" name="pm_project">
+            <option value="" disabled selected> -- </option>
+            {% for pm_project in objects_pm_project %}
+                <option value="pm_project__{{pm_project.project_name}}">{{pm_project.project_name|safe}}</option>
+            {% endfor %}
+        </select>
+
+        <label for="user_infos">User Info:</label>
+        <select id="user_infos" name="user_infos">
+            <option value="" disabled selected> -- </option>
+            {% for user_infos in objects_user_info %}
+                <option value="user_infos__{{user_infos.user_id}}">{{user_infos.first_name|safe}}, {{user_infos.last_name|safe}} </option>
+            {% endfor %}
+        </select>
+
+
+        {% csrf_token %}
+
+        {{new_internal_document_form.as_p|safe}}
+
+        <input type="submit" value="Create Document">
+
+    </form>
+</div>
+{% endblock %}

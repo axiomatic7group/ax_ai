@@ -1,0 +1,22 @@
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+      - "8080:8080"
+    volumes:
+      - static_volume:/ax_ai/static
+      - sqlite_data:/usr/local/bin/ax_ai/db.sqlite3
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+
+volumes:
+  static_volume:
+  sqlite_data:

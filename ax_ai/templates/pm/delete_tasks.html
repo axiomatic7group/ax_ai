@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="form_div" >
+    <form name='delete_tasks_form' id='delete_tasks_form' action='/cadence/delete_tasks/' method='post'>
+        {% csrf_token %}
+
+        {{delete_tasks_form.as_p|safe}}
+
+        <input type="submit" value="post">
+
+    </form>
+</div>
+{% endblock %}

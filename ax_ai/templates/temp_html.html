@@ -1,0 +1,878 @@
+{% extends "base public.html" %}
+
+
+{% block content %}
+    <style>
+        @import url('https://googleapis.com');
+
+        :root {
+            --bg-dark: oklch(0.1 0.075 255);
+            --bg: oklch(0.15 0.075 255);
+            --bg-light: oklch(0.2 0.075 255);
+            --text: oklch(0.96 0.1 255);
+            --text-muted: oklch(0.76 0.1 255);
+            --highlight: oklch(0.5 0.15 255);
+            --border: oklch(0.4 0.15 255);
+            --border-muted: oklch(0.3 0.15 255);
+            --brand-primary: #f20202;
+            --brand-secondary: #637899;
+            
+            --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Hardware Toggle Styles */
+        .toggle-group {
+            display: flex;
+            background-color: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.25rem;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background-color: var(--border);
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* Slider Controls Box */
+        .controls-card {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .slider-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .memory-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--highlight);
+        }
+
+        .slider-input {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--border-muted);
+            outline: none;
+            margin: 1.5rem 0;
+            border: solid thin var(--border);
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--highlight);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--highlight);
+        }
+
+        /* Grid Layout */
+        .model-grid {
+            display: flex;
+            flex-flow: wrap;
+            justify-content: space-evenly;
+            gap: 1rem;
+        }
+
+        .model-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-muted);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            width: 49%;
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .model-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .model-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .architecture-badge {
+            background-color: var(--bg-dark);
+            border: 3px solid var(--border);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Matrix Table rows for Quantizations */
+        .quant-matrix {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .quant-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr;
+            padding: 0.35rem;
+            border-radius: 6px;
+            font-size: 12px;
+            align-items: center;
+        }
+
+        .status-fit {
+            background-color: var(--border-muted);
+            border: 1px solid var(--bg-dark);
+        }
+
+        .status-fit .quant-name { color: var(--info); font-weight: 600; }
+        .status-fit .context-capacity { color: var(--bullish); }
+
+        .status-fail {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--highlight);
+            opacity: 0.5;
+        }
+
+        .status-fail .quant-name { color: var(--text-muted); }
+        .status-fail .context-capacity { color: var(--bearish); }
+
+        .text-right { text-align: right; }
+
+        /* 
+          ELEGANT STRUCTURE & BACKDROP 
+          Moving away from heavy borders/grids into high-end editorial lighting.
+        */
+        .hero-viewport {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Complex, layered luminous gradient system imitating premium hardware interfaces */
+        .hero-viewport::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(90% 40% at 50% 0%, rgba(99, 120, 153, 0.12) 0%, transparent 80%),
+                radial-gradient(50% 50% at 90% 20%, rgba(242, 2, 2, 0.03) 0%, transparent 70%),
+                radial-gradient(60% 60% at 10% 80%, rgba(99, 120, 153, 0.04) 0%, transparent 80%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 
+          NAVIGATION 
+          Asymmetrical, floating luxury spacing.
+        */
+        .nav-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 2.5rem 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand-cluster {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .brand-logo-mark {
+            position: relative;
+            width: 14px;
+            height: 14px;
+            border: 1px solid var(--border);
+            transform: rotate(45deg);
+        }
+
+        .brand-logo-mark::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            background-color: var(--brand-primary);
+            transition: background-color 0.3s ease;
+        }
+
+        .brand-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+        }
+
+        .nav-links {
+            display: none;
+            align-items: center;
+            gap: 3.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .nav-links {
+                display: flex;
+            }
+        }
+
+        .nav-link {
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--text);
+        }
+
+        .nav-cta {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            text-decoration: none;
+            color: var(--text);
+            background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.5rem 1.25rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            border-color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* 
+          WORKSPACE GRID 
+          Generous alignment and breathing room.
+        */
+        .hero-workspace {
+            position: relative;
+            z-index: 5;
+            width: 100%;
+            max-width: 1440px;
+            margin: auto;
+            padding: 4rem 3rem 8rem;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 6rem;
+            align-items: center;
+        }
+
+        @media (min-width: 1024px) {
+            .hero-workspace {
+                grid-template-columns: repeat(12, minmax(0, 1fr));
+                gap: 4rem;
+            }
+        }
+
+        /* LEFT CONTENT COLUMN */
+        .content-frame {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        @media (min-width: 1024px) {
+            .content-frame {
+                grid-column: span 7 / span 7;
+                padding-right: 3rem;
+            }
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.35rem 1rem;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 1px solid var(--brand-primary);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            margin-bottom: 2.5rem;
+        }
+
+        .status-badge strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .status-badge span {
+            color: rgba(255, 255, 255, 0.15);
+        }
+
+        .status-badge text {
+            color: var(--brand-secondary);
+        }
+
+        .main-title {
+            font-size: 2.75rem;
+            font-weight: 700;
+            line-height: 1.12;
+            letter-spacing: -0.03em;
+            margin-bottom: 2.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .main-title {
+                font-size: 4rem;
+            }
+        }
+
+        .highlight-text {
+            color: var(--brand-primary);
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .description-paragraph {
+            font-size: 1.05rem;
+            font-weight: 300;
+            line-height: 1.7;
+            color: var(--text-muted);
+            max-width: 38rem;
+            margin-bottom: 3.5rem;
+        }
+
+        .description-paragraph strong {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .button-matrix {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 1.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .button-matrix {
+                flex-direction: row;
+                width: auto;
+            }
+        }
+
+        .btn {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            text-align: center;
+            padding: 1.1rem 2.25rem;
+            border-radius: 4px;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 100%;
+        }
+
+        @media (min-width: 640px) {
+            .btn {
+                width: auto;
+            }
+        }
+
+        .btn-filled {
+            background-color: var(--text);
+            color: var(--bg-dark);
+            border: 1px solid var(--text);
+        }
+
+        .btn-filled:hover {
+            background-color: transparent;
+            color: var(--text);
+            box-shadow: 0 8px 30px rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-muted);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text);
+            color: var(--text);
+        }
+
+        /* 
+          RIGHT VISUALIZATION FRAME 
+          Designed like a high-end physical asset overlay.
+        */
+        .visualization-frame {
+            width: 100%;
+        }
+
+        @media (min-width: 1024px) {
+            .visualization-frame {
+                grid-column: span 5 / span 5;
+            }
+        }
+
+        .terminal-panel {
+            background: linear-gradient(145deg, var(--bg-light) 0%, var(--bg-dark) 100%);
+            border: 1px solid var(--border-muted);
+            border-radius: 6px;
+            padding: 2rem;
+            font-size: 16px;
+            line-height: 1.7;
+            text-align: left;
+            position: relative;
+            box-shadow: 
+                0 30px 70px -20px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        /* Sophisticated light reflection across the visual container */
+        .terminal-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+                        justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            color: var(--info);
+            font-weight: 600;
+        }
+
+        .terminal-title {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .terminal-title-dot {
+            width: 4px;
+            height: 4px;
+            background-color: var(--brand-primary);
+            border-radius: 50%;
+        }
+
+        .terminal-status-tag {
+            font-size: 12px;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .terminal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .input-line {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .prompt-symbol {
+            color: rgba(255, 255, 255, 0.2);
+            margin-right: 0.25rem;
+        }
+
+        .output-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .output-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+
+        .check-icon {
+            color: var(--brand-secondary);
+            font-weight: bold;
+        }
+
+        .metadata-box {
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .metadata-line {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .metadata-label {
+            color: rgba(255, 255, 255, 0.25);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metadata-value {
+            color: var(--text-muted);
+            text-align: right;
+        }
+    </style>
+
+    <div class="hero-viewport">
+
+        <main class="hero-workspace">
+            <div class="content-frame">
+                <div class="status-badge">
+                    <div class="status-pulse"></div>
+                    <strong>CORE ENGINE V0.1</strong>
+                    <span>│</span>
+                    <text>AVAILABLE FOR FREE</text>
+                </div>
+
+                <h1 class="main-title">
+                    Scale operational capacity <br>
+                    <span class="highlight-text">without</span> adding headcount.
+                </h1>
+
+                <p class="description-paragraph">
+                    <strong>Ax AI</strong> is a Free Open-Source AI Operating System, engineered explicitly for organizations looking for secure AI options.
+                    AI that helps you run & manage your business without selling you out to Big Tech. <br>
+                    Anyone, no matter your tech skills, can get started with Ax AI for free in less than 10 minutes. Discover everything Ax AI can do for your business.
+                    
+                </p>
+
+                <div class="button-matrix">
+                    <a href="#deploy" class="btn btn-filled" title="deploy the best local AI system">
+                        Deploy Free Local AI
+                    </a>
+                    <a href="#architecture" class="btn btn-outline" title="See Ax AI in action">
+                        See How Ax AI Works
+                    </a>
+                </div>
+            </div>
+
+            <div class="visualization-frame">
+                <div class="terminal-panel">
+                    
+                    <div class="terminal-header">
+                        <span class="terminal-title">
+                            <div class="terminal-title-dot"></div>
+                            ax_ai.operating_system // ontology active
+                        </span>
+                        <span class="terminal-status-tag">SYS_READY</span>
+                    </div>
+
+                    <div class="terminal-body">
+                        <div class="input-line">
+                            <span class="prompt-symbol">#</span> docker-compose up -d --build
+                        </div>
+                        
+                        <div class="output-tree">
+                            <div class="output-row">
+                                <span class="check-icon">→</span> <span>Seamlessly unify isolated internal systems & data sources</span>
+                            </div>
+                            <div class="output-row">
+                                <span class="check-icon">→</span> <span> Transform them into highly predictable background task-workflows</span>
+                            </div>
+                            <div class="output-row">
+                                <span class="check-icon">→</span> <span>Execute them natively inside your network</span>
+                            </div>
+                        </div>
+
+                        <div class="metadata-box">
+                            <div class="metadata-line">
+                                <span class="metadata-label">Always Free</span>
+                                <span class="metadata-value">localhost:8000</span>
+                            </div>
+                            <div class="metadata-line">
+                                <span class="metadata-label">Compute You Own</span>
+                                <span class="metadata-value">Local RAM / Consumer GPUs</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+<div style="padding: 1rem;">
+    <div class="controls-card">
+        <div class="control-row">
+            <!-- Hardware Mode Selector -->
+             <h2>Find the Right Local Model for You</h2>
+             <p> How to find your computer's RAM/GPU - link to github README</p>
+             <br>
+            <div>                
+                <div class="toggle-group">
+                    <button class="toggle-btn active" data-mode="vram">GPU VRAM</button>
+                    <button class="toggle-btn" data-mode="ram">System RAM</button>
+                </div>
+            </div>
+
+            <!-- Target Allocation Slider -->
+            <div class="slider-container">
+                <div class="slider-header">
+                    <span class="slider-title">Available Target Memory Pool Size</span>
+                    <span class="memory-display" id="memoryValue">32 GB</span>
+                </div>
+                <input type="range" min="8" max="64" value="32" step="1" class="slider-input" id="memorySlider">
+            </div>
+        </div>
+        
+        <p class="overhead-notice" id="overheadExplanation">
+            Reserve: <span class="overhead-highlight" id="overheadValue">0.0 GB</span>; No reserve needed in VRAM.
+        </p>
+    </div>
+
+    <!-- Render Targets -->
+    <div class="model-grid" id="modelGrid"></div>
+    
+</div>
+
+{{ django_models_list|json_script:"models-data" }}
+
+<script>
+    const QUANT_MULTIPLIERS = {
+        "FP16 (Unquantized)": 2.0,
+        "8-bit (Q8)": 1.15,
+        "4-bit (Q4)": 0.55
+    };
+
+    const GQA_METRICS = {
+        layers: 32,
+        kvHeads: 8,
+        headDim: 128,
+        precisionBytes: 2 
+    };
+
+    const BYTES_PER_TOKEN = 2 * GQA_METRICS.layers * GQA_METRICS.kvHeads * GQA_METRICS.headDim * GQA_METRICS.precisionBytes;
+    const GB_PER_TOKEN = BYTES_PER_TOKEN / Math.pow(1024, 3);
+
+    // Current Active UI State variables
+    let currentMode = 'vram'; 
+
+    const slider = document.getElementById('memorySlider');
+    const memoryDisplay = document.getElementById('memoryValue');
+    const modelGrid = document.getElementById('modelGrid');
+    const overheadValueDisplay = document.getElementById('overheadValue');
+    const overheadExplanation = document.getElementById('overheadExplanation');
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    
+    const rawModelsData = JSON.parse(document.getElementById('models-data').textContent);
+
+    function updateMatrix() {
+        const selectedMemoryGb = parseInt(slider.value);
+        memoryDisplay.textContent = `${selectedMemoryGb} GB`;
+
+        // Dynamically shift operating system baseline reservations based on current layout mode
+        const systemOverheadGb = (currentMode === 'ram') ? 2.0 : 0.0;
+        
+        // Update notice texts dynamically
+        overheadValueDisplay.textContent = `${systemOverheadGb.toFixed(1)} GB`;
+        if (currentMode === 'ram') {
+            overheadExplanation.innerHTML = `Calculations reserve <span class="overhead-highlight">2.0 GB</span> for baseline operating system overhead to protect system stability when running directly out of primary System RAM.`;
+        } else {
+            overheadExplanation.innerHTML = `Calculations reserve <span class="overhead-highlight">0.0 GB</span> for baseline operating system overhead since your OS layer executes cleanly outside your dedicated GPU VRAM pool.`;
+        }
+
+        modelGrid.innerHTML = '';
+
+        rawModelsData.forEach(model => {
+            const rawModelsInfo = model.model_info;
+            const card = document.createElement('div');
+            card.className = 'model-card';
+            
+            const isMoE = model.total_params !== model.active_params;
+            const archLabel = isMoE ? `Mixture of Experts (MoE)` : `${rawModelsInfo.model_type}`;
+            const metaLabel = isMoE ? 
+                `Total parameters: ${model.total_params}B | Active: ${model.active_params}B` : 
+                `Parameters: ${model.total_params}B`;
+
+            let htmlString = `
+                <div class="model-header">
+                    <div>
+                        <h3 class="model-title">${model.name}</h3>
+                        <div class="model-meta">${metaLabel}</div>
+                    </div>
+                    <span class="architecture-badge">${archLabel}</span>
+                </div>
+                <div class="quant-matrix">
+                            `;
+
+            Object.keys(QUANT_MULTIPLIERS).forEach(quantName => {
+                const hasQuant = rawModelsInfo.hasOwnProperty(quantName);
+                const multiplier = QUANT_MULTIPLIERS[quantName];
+                const staticWeightGb = model.total_params * multiplier;
+                
+                // Final safety limit equation factors in the toggle adjustments
+                const totalRequiredWithOverhead = staticWeightGb + systemOverheadGb; 
+                
+                let rowClass = '';
+                let contextMessage = '';
+
+                if (selectedMemoryGb >= totalRequiredWithOverhead && hasQuant) {
+                    rowClass = 'status-fit';
+                    const remainingMemoryForKv = selectedMemoryGb - totalRequiredWithOverhead;
+                    const maxTokens = Math.floor(remainingMemoryForKv / GB_PER_TOKEN);
+                    
+                    contextMessage = maxTokens > 0 ? 
+                        `✓ Fits smoothly (~${maxTokens.toLocaleString()} context window max)` : 
+                        `✓ Weights fit (Minimal context room remaining)`;
+                } else {
+                    rowClass = 'status-fail';
+                    contextMessage = `✗ Insufficient space (Needs ${totalRequiredWithOverhead.toFixed(1)} GB)`;
+                }
+                
+                let quant_link = "";
+                if (quantName === "4-bit (Q4)" ) { 
+                    quant_link = rawModelsInfo["4-bit (Q4)"];
+                } else if (quantName === "8-bit (Q8)" ) { 
+                    quant_link = rawModelsInfo["8-bit (Q8)"];
+                } else { 
+                    quant_link = rawModelsInfo["FP16 (Unquantized)"];
+                }
+
+                htmlString += `
+                    <div class="quant-row ${rowClass}">
+                        <form action="https://github.com/axiomatic7group" method="GET" class="clickable-row-form" title="Get Started with Ax AI for Free" target="_blank">
+                            <button type="submit" class="clickable-row" >
+                                <span class="quant-name">${quantName}</span>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Size: ${staticWeightGb.toFixed(1)} GB</span>
+                                <span class="context-capacity text-right">${contextMessage}</span>
+                            </button>
+                        </form>
+                    </div>
+                `;
+            });
+
+            htmlString += `</div>`;
+            card.innerHTML = htmlString;
+            modelGrid.appendChild(card);
+        });
+    }
+
+    // Bind Event Listeners for the toggle button mechanics
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            toggleButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentMode = e.target.getAttribute('data-mode');
+            updateMatrix();
+        });
+    });
+
+    slider.addEventListener('input', updateMatrix);
+    
+    // Initial runtime execution loop
+    updateMatrix();
+</script>
+
+
+
+<script>
+    let msgbox = document.querySelector('.main_container');
+            msgbox.scrollTop = msgbox.scrollHeight;
+</script>
+
+<script>
+    function openTab(evt, tabId) {
+        // Hide all tab content
+        const contents = document.querySelectorAll('.tab-content');
+        contents.forEach(content => content.classList.remove('active'));
+
+        // Remove active class from all buttons
+        const buttons = document.querySelectorAll('.tab-button');
+        buttons.forEach(button => button.classList.remove('active'));
+
+        // Show current tab content and add active class to clicked button
+        document.getElementById(tabId).classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+</script>
+
+{% endblock %}
+
+
+

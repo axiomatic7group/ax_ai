@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="main_project" >
+    <div class="project_top_buttons">
+        <form name='run_project_template' id='run_project_template' action='../run_project_template/{{project_template_id}}' method='get'>
+            <input type="submit" value="Run Project">
+        </form>
+
+        <form name='edit_project_template' id='edit_project_template' action='' method='get'>
+            <input type="submit" value="Edit Project">
+        </form>
+
+        <form name='copy_project_template' id='copy_project_template' action='../copy_project_template/{{project_template_id}}' method='get'>
+                    <input type="submit" value="Copy Project">
+                </form>
+    </div>
+
+
+    <div class="project_side">
+        <div class="project_info">
+            {{project_to_build|safe}}
+
+            <form name='ax_task_prerequisite_form' id='ax_task_prerequisite_form' action='' method='post'>
+                <input type="hidden" name="form_name" value="ax_task_prerequisite_form">
+                {% csrf_token %}
+
+                {{ax_task_prerequisite_form.as_p|safe}}
+                <input type="submit" value="Add Task Connection">
+            </form>
+
+            
+        </div>
+
+
+        <form name='axiom_bot_message_task_form' id='axiom_bot_message_task_form' action='' method='post' style="width:40%" enctype="multipart/form-data">
+            <input type="hidden" name="form_name" value="axiom_bot_message_task_form">
+            {% csrf_token %}
+
+            {{axiom_bot_message_task_form.as_p|safe}}
+
+            <label for="file-upload">Choose File:</label>
+            <input type="file" id="file-upload" name="filename">
+
+            <input type="submit" value="Add Task">
+        </form>
+    </div>
+
+    
+
+    <div class="task_side">
+        
+        {% if list_of_tasks %}
+            {% for task in list_of_tasks %}
+            <form name='task_form_to_edit' class='task_form_to_edit' id='task_form_to_edit' action='' method='post' enctype="multipart/form-data">
+                <input type="hidden" name="form_name" value="task_form_to_edit">
+                <input type="hidden" name="task_id" value="{{task.id}}">
+                {% csrf_token %}
+                <input type="submit" value="Edit Project">
+                {% if task.id == task_form_to_edit_id %}
+                    <div class="main_help">
+                        <div class="help">
+                            <p class="task_help">{{help|safe}}</p>
+                        </div>
+
+                        <form name='task_form_to_add_task' class='task_form_to_add_task' id='task_form_to_add_task' action='' method='post' enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{task_form_to_edit.as_p|safe}}
+                            <input type="submit" value="Run Task">
+                            <label for="file-upload">Choose File:</label>
+                            <input type="file" id="file-upload" name="filename">
+                        </form>
+
+                    </div>
+                {% else %}
+                    <div class="task_card">
+                        <div class="task_card_left">
+                            <h3 class="task_name"> {{task.task_project_order}}. {{project_to_build.project_name}}</h3>
+                            <p> {{task.user_prompt}} </p>
+
+                            {% if list_of_tasks_attach %}
+                                {% for task_attach in list_of_tasks_attach %}
+                                    {% if task_attach.attachemnet_task_id == task.id %}
+                                        <p class="task_attachemnet">{{task_attach.attachemnet|safe}}</p>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+
+                            {% if list_of_tasks_status %}
+                                {% for task_status in list_of_tasks_status %}
+                                    {% if task_status.task_observed_id == task.id %}
+
+                                        {{task_status|safe}}
+
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+
+                            {% if list_of_task_relationships %}
+                                {% for task_rel in list_of_task_relationships %}
+                                    {% if task_rel.main_task_id == task.id%}
+                                        <p class="task_rel">{{task_rel.task_relationship|safe}} - {{task_rel.second_task_id|safe}}</p>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        {% if task.model_response %}
+                            <div class="task_card_right">
+
+                                {% for form_task in temp_list_of_tasks %}
+                                    {% if task.id == form_task.id %}
+
+                                        <!-- <form name='task_form_to_edit' class='task_form_to_edit' style="width:50%" id='task_form_to_edit' action='' method='post' enctype="multipart/form-data"> -->
+                                        <div class="form_div_task">    
+                                            {% csrf_token %}
+                                            {{form_task.form.as_p|safe}}
+                                            <label for="file-upload">Choose File:</label>
+                                            <input type="file" id="file-upload" name="filename">
+                                        </div>
+                                        <!-- </form> -->
+                                        
+                                        <div style="width:50%; padding:1rem;">
+                                            {{task.model_response|safe}}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </form>
+            {% endfor %}
+        {% endif %}
+   
+    </div>
+ 
+
+</div>
+{% endblock %}
