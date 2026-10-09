@@ -35,10 +35,10 @@ From local agents and automated meeting notes to cleaning leads and managing cli
 
 | Episode | Topic | Business Topic | Markdown Reference |
 |---|---|---|---|
-| Ep 1: Installation & Setup | Quick Guide ~6mins - link | Easy & Secure Local AI ~9 mins - link | [Quick Start & Installation] - link |
-| Ep 2: How Audio Notes Works | Quick Guide ~6mins - link | Free Granola Notetaker  ~9 mins - link | [How audio works] - link |
-| Ep 3: How Local Files Works | Quick Guide ~6mins - link | Easy & Secure Local RAG  ~9 mins - link | [How local files works] - link |
-| Ep 4: How Websearch Works | Quick Guide ~6mins - link | Don't Waste time with Bad Leads  ~9 mins - link | [How websearch works] - link |
+| Ep 1: Installation & Setup | [Quick Guide](https://www.youtube.com/watch?v=GYdxLapCx2c) ~2mins | Easy & Secure Local AI ~9 mins | [See Steps Below](# 2. Quick Start & Installation) |
+| Ep 2: How Audio Notes Works | Quick Guide - coming soon | Free Granola Notetaker  ~9 mins | [See Steps Below](###     3.1.2 How audio tool works) |
+| Ep 3: How Local Files Works | Quick Guide - coming soon | Easy & Secure Local RAG  ~9 mins | [See Steps Below](###     3.1.3 How local tool files works) |
+| Ep 4: How Websearch Works | Quick Guide - coming soon | Don't Waste time with Bad Leads  ~9 mins | [See Steps Below](###     3.1.4 How websearch tool works)|
 
 
 
@@ -170,10 +170,12 @@ Step by step install process for Ax AI
 
 ```
 # Clone the repository
-git clone https://github.com
-cd your-repo-name
+
+git clone https://github.com/axiomatic7group/ax_ai
+cd ax_ai
 
 # Run the setup script or container initialization and this will start and run your docker image as well
+
 docker-compose up --build -d
 
 # go to -> http://127.0.0.1:8000/ on your browser to see if it works 
