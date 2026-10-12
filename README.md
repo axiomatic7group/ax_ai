@@ -35,7 +35,7 @@ From local agents and automated meeting notes to cleaning leads and managing cli
 
 | Episode | Topic | Business Topic | Markdown Reference |
 |---|---|---|---|
-| Ep 1: Installation & Setup | [Quick Guide](https://www.youtube.com/watch?v=GYdxLapCx2c) ~2mins | Easy & Secure Local AI ~9 mins | [See Steps Below](# 2. Quick Start & Installation) |
+| Ep 1: Installation & Setup | [Quick Guide](https://www.youtube.com/watch?v=GYdxLapCx2c) ~2mins | [Easy & Secure Local AI](https://www.youtube.com/watch?v=pkXRfhG60oU) ~9 mins | [See Steps Below](# 2. Quick Start & Installation) |
 | Ep 2: How Audio Notes Works | Quick Guide - coming soon | Free Granola Notetaker  ~9 mins | [See Steps Below](###     3.1.2 How audio tool works) |
 | Ep 3: How Local Files Works | Quick Guide - coming soon | Easy & Secure Local RAG  ~9 mins | [See Steps Below](###     3.1.3 How local tool files works) |
 | Ep 4: How Websearch Works | Quick Guide - coming soon | Don't Waste time with Bad Leads  ~9 mins | [See Steps Below](###     3.1.4 How websearch tool works)|
@@ -182,7 +182,7 @@ docker-compose up --build -d
 
 ```
 
-### 2.2 Getting Started
+### 2.2 Getting Started - [Link to YT Video](https://www.youtube.com/watch?v=pkXRfhG60oU)
 Show a literal, realistic example of your configuration format. Use high-contrast code blocks with realistic dummy data instead of abstract placeholders.
 
 ```
