@@ -470,27 +470,6 @@ button a:hover {
     text-align: left;
 }
 
-.tr_completed {
-    background-color: var(--success);
-    color: var(--border-muted);
-}
-
-.tr_not_started {
-    background-color: var(--bg-dark);
-    color: var(--text-muted);
-
-}
-
-.tr_late {
-    background-color: var(--warning);
-    color: var(--bg);
-}
-
-.tr_past_due {
-    background-color: var(--danger);
-    color: var(--bg);
-}
-
 .div_completed {
     background-color: var(--success);
     color: var(--bg);

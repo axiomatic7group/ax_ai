@@ -3,6 +3,8 @@ from django.urls import path, include
 from . import views
 #get_deliverable_data
 urlpatterns = [
+    path('check_inbox/', views.connect_to_email.ai_check_inbox, name='check_inbox_html'),
+    path('add_email_connection/', views.connect_to_email.as_view(), name='add_connect_to_email_html'),
 
     path('delete_stakeholder_to_project_api_post/<slug:stakeholder_project_id>/', views.add_stakeholder_project.delete_stakeholder_project, name='delete_stakeholder_project'),
     path('add_stakeholder_to_project_api_post/', views.add_stakeholder_project.post_api, name='add_stakeholder_to_project_api_post'),

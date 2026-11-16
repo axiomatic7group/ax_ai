@@ -34,7 +34,8 @@ from django.conf import settings
 def check_authentication(check_request):
     if not check_request.user.is_authenticated:
         return redirect("/login")
-
+    elif not check_request.user.is_staff:
+        return redirect("/login")
     
 def check_files(request, ax_task):
     UPLOAD_FOLDER = r"axiom/task_attachements"
@@ -69,7 +70,7 @@ def check_files(request, ax_task):
         return {'message':'Malicious file detected.',
                     'state':'0'}
 
-def run_project_task(i_task, list_of_tasks_attach_dict, list_of_tasks_relationship_dict, project_to_build):
+def run_project_task(request, i_task, list_of_tasks_attach_dict, list_of_tasks_relationship_dict, project_to_build):
 ### check for task relationships; f2s relationships force output of second_task into task summary of main task
     context_task = {}
     if not i_task['model_response']:
@@ -177,8 +178,11 @@ def run_project_task(i_task, list_of_tasks_attach_dict, list_of_tasks_relationsh
         i_task['user_prompt'] = f"///User Prompt:{str(i_task['user_prompt'])};" + f"///Relevant Information from previous task:{str(prompt_prev_task)};"
         
         temp_model_personality = model_personality.objects.filter(id=i_task['bot_personality_id']).first() or ""
+
 ### change the model used based on user input
         temp_model_connection  = model_connection.objects.get(id=1)
+        temp_model_base = model_base.objects.get(id=temp_model_connection.model_base.id)
+        temp_model_base_connection = model_base_user_connection.objects.get(chat_user=request.user, model_base=temp_model_base)
 
 ### Check for attachements; add relevant attachements to list for context_task
         if len([item for item in list_of_tasks_attach_dict if item.get('attachemnet_task_id') == i_task['id']]) >= 1:
@@ -215,14 +219,18 @@ def run_project_task(i_task, list_of_tasks_attach_dict, list_of_tasks_relationsh
             temp_task = send_task_to_model(
                         promt_message = i_task, user_request = temp_user_request_val, 
                         personality = temp_model_personality, run_tempereature=temp_model_personality.personality_temp, top_p=temp_model_personality.personality_top_p,
-                        chat_summary = temp_chat_summary, chat_tool = i_task['bot_tool'], model_base = temp_model_connection.model_base, #model_con
-                        model_name = temp_model_connection.model_name, model_api_key = temp_model_connection.model_api_key, strcutured_output=i_task['fixed_output']) #model_con
+                        chat_summary = temp_chat_summary, chat_tool = i_task['bot_tool'], 
+                        model_base = temp_model_base.model_base_url, #model_con
+                        model_name = temp_model_connection.model_name, 
+                        model_api_key = temp_model_base_connection.model_api_key, strcutured_output=i_task['fixed_output']) #model_con
         else:
             temp_task = send_task_to_model(
                 promt_message = i_task, user_request = temp_user_request_val, 
                 personality = temp_model_personality, run_tempereature=temp_model_personality.personality_temp, top_p=temp_model_personality.personality_top_p,
-                chat_summary = temp_chat_summary, chat_tool = i_task['bot_tool'], model_base = temp_model_connection.model_base, #model_con
-                model_name = temp_model_connection.model_name, model_api_key = temp_model_connection.model_api_key,) #model_con
+                chat_summary = temp_chat_summary, chat_tool = i_task['bot_tool'], 
+                model_base = temp_model_base.model_base_url, #model_con
+                model_name = temp_model_connection.model_name, 
+                model_api_key = temp_model_base_connection.model_api_key,) #model_con
         
         if temp_task.status == "1":
             temp_task_to_edit = axiom_bot_message_task.objects.get(id=i_task['id'])
@@ -270,7 +278,7 @@ def add_project_run_to_scheduler(project_template_id, day_count, date_start):
         scheduler.add_job(apscheduler_functions.send_user_message, 'date', run_date=i_message['run_date'], id=unique_id, 
                         kwargs={'message': i_message['message'], 'user_to_recieve_id': user_to_notify.pk})
 
-def run_project(project_to_build):
+def run_project(project_to_build, request):
     context_run_proj = {'project_to_build':model_to_dict(project_to_build)}
             
     if axiom_bot_message_task.objects.filter(task_project=project_to_build).exists():
@@ -287,7 +295,7 @@ def run_project(project_to_build):
         ### Run each task - Add Step to sort by task_project_order and run in that order
         for i_task in list_of_tasks_dict:
             if not i_task['model_response']:
-                temp_task_output = run_project_task(i_task, list_of_tasks_attach_dict, list_of_tasks_relationship_dict, project_to_build)
+                temp_task_output = run_project_task(request, i_task, list_of_tasks_attach_dict, list_of_tasks_relationship_dict, project_to_build)
                 context_run_proj = context_run_proj | temp_task_output
         
         list_of_tasks = axiom_bot_message_task.objects.filter(task_project=project_to_build)
@@ -561,7 +569,7 @@ class run_project_template(View):
             start_time = datetime.now()
             print(f"Start Time:  {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
 
-            temp_output = run_project(project_to_build)
+            temp_output = run_project(project_to_build, request)
 
             finish_time = datetime.now()
             print(f"Finish Time: {finish_time.strftime('%Y-%m-%d %H:%M:%S')}")

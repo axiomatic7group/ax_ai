@@ -10,25 +10,28 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
 from django.conf import settings
+from dateutil.relativedelta import relativedelta
+from datetime import datetime, date, timedelta
+from quicksand.quicksand import quicksand
+from collections import defaultdict
 
 import pandas as pd
 import json, re, pytz, os
 from .models import *
 from .forms import *
+
 from .mechanisms import apscheduler_functions
+from .mechanisms import send_email
+from .mechanisms.calendar_util import ProjectGridCalendar
+
 from synapse.models import user_info
 from axiom.models import project_template
+from axiom.views import run_project
+
+from bots.views import send_message_to_model
+from bots.models import *
 
 UPLOAD_FOLDER = "/home/daniel/Desktop/test/"
-
-from dateutil.relativedelta import relativedelta
-from datetime import datetime, date, timedelta
-from quicksand.quicksand import quicksand
-
-from axiom.views import run_project
-from .calendar_util import ProjectGridCalendar
-from collections import defaultdict
-
 
 
 def check_task_status():
@@ -1714,7 +1717,8 @@ class user_message_view(View):
         else:
             user_reciver_u = User.objects.get(id=message_sender)
             user_reciver = user_info.objects.get(user=user_reciver_u)
-            add_user_messages_form = add_user_messages(request.GET or None, initial={"user_reciver":user_reciver, "message_sender":request_user})
+            context['user_reciver'] = user_reciver
+            add_user_messages_form = add_user_messages_chat(request.GET or None, initial={"user_reciver":user_reciver, "message_sender":request_user})
 
             if user_reciver.user_type == "stakeholder":
                 if task.objects.filter(task_name=f"stakeholder-task-{user_reciver_u.id}").exists():
@@ -1738,6 +1742,10 @@ class user_message_view(View):
         context['add_user_messages_form'] = add_user_messages_form
         context['list_of_sender'] = output_list
         context['messages_to_show'] = messages_to_show.to_dict('records')
+        if user_info.objects.filter(user=request.user).exists():
+            temp_user_info = user_info.objects.get(user=request.user)
+            if user_email_info.objects.filter(user_info=temp_user_info).exists():
+                context['user_inbox'] = "True"
         return render(request, 'pm/user_message_view.html', context)
     
     def post(self, request, message_sender):
@@ -1746,19 +1754,34 @@ class user_message_view(View):
         context = {}
         context['message_sender'] = message_sender
         request_user = User.objects.get(username=request.user)
-        add_user_messages_form = add_user_messages(data=request.POST or None)
+        
+        user_reciver_u = User.objects.get(id=message_sender)
+        user_reciver = user_info.objects.get(user=user_reciver_u)
+
+        add_user_messages_form = add_user_messages_chat(data=request.POST or None)
 
         if add_user_messages_form.is_valid():
             new_user_messages = add_user_messages_form.save(commit=False)
             new_user_messages.created_date = timezone.now()
             new_user_messages.message_sender = str(user_info.objects.get(user=request_user).pk)
+            new_user_messages.user_reciver = user_reciver
             new_user_messages.save()
             
             context = {'new_user_messages':new_user_messages}
             messages.success(request, 'new user_message created: ' + str(new_user_messages.id))
+
+        send_as_email = request.POST.get("send_as_email")
+        if send_as_email is not None:
+            if user_info.objects.filter(user=request.user).exists():
+                temp_user_info = user_info.objects.get(user=request.user)
+                if user_email_info.objects.filter(user_info=temp_user_info).exists():
+                    main_email = user_email_info.objects.filter(user_info=temp_user_info).first()
+                    recepient_email = new_user_messages.user_reciver.user_email
+                    
+                    send_email(main_email.user_email, new_user_messages.message , f"{main_email.user_name} Sent You a Message on Ax Network", recepient_email, cc=None, bcc=None,)
+                    messages.success(request, 'new user_message created: ' + str(new_user_messages.id) + " | and Email Sent!") 
             
         return redirect(f'/cadence/user_message_view/{message_sender}')
-
 
 class add_user_message(View):
     def get(self, request):
@@ -2054,6 +2077,13 @@ class manage_projects(View):
             return check_authentication(request)
         
         context = get_user_dashboard_info(request)
+
+        if user_info.objects.filter(user=request.user).exists():
+            temp_user_info = user_info.objects.get(user=request.user)
+            if user_email_info.objects.filter(user_info=temp_user_info).exists():
+                main_email = user_email_info.objects.filter(user_info=temp_user_info).first()
+                context['user_inbox'] = "True"
+
         return render(request, 'pm/manage_projects.html', context)
     
     def get_deliverable_data(request, deliverable_id):
@@ -2061,6 +2091,12 @@ class manage_projects(View):
             return check_authentication(request)
         
         context = get_user_dashboard_info(request)
+        if user_info.objects.filter(user=request.user).exists():
+            temp_user_info = user_info.objects.get(user=request.user)
+            if user_email_info.objects.filter(user_info=temp_user_info).exists():
+                main_email = user_email_info.objects.filter(user_info=temp_user_info).first()
+                context['user_inbox'] = "True"
+
         get_user_info = user_info.objects.get(user_id=request.user.id)
 
         try:
@@ -2094,6 +2130,13 @@ class manage_projects(View):
             return check_authentication(request)
         
         context = get_user_dashboard_info(request)
+        if user_info.objects.filter(user=request.user).exists():
+            temp_user_info = user_info.objects.get(user=request.user)
+            if user_email_info.objects.filter(user_info=temp_user_info).exists():
+                main_email = user_email_info.objects.filter(user_info=temp_user_info).first()
+                context['user_inbox'] = "True"
+
+
         get_user_info = user_info.objects.get(user_id=request.user.id)
         temp_context = get_project_info(project_name)
         context.update(temp_context)
@@ -2119,6 +2162,13 @@ class manage_projects(View):
             return check_authentication(request)
 
         context = get_user_dashboard_info(request)
+        if user_info.objects.filter(user=request.user).exists():
+            temp_user_info = user_info.objects.get(user=request.user)
+            if user_email_info.objects.filter(user_info=temp_user_info).exists():
+                main_email = user_email_info.objects.filter(user_info=temp_user_info).first()
+                context['user_inbox'] = "True"
+
+
         get_user_info = user_info.objects.get(user_id=request.user.id)
         context['task_id'] = task_id
 
@@ -2158,3 +2208,86 @@ class manage_projects(View):
                 context['task_staff_to_return'] = task_staff_to_return.to_dict('records')
 
         return render(request, 'pm/manage_projects.html', context)
+
+class connect_to_email(View):
+    def get(self, request):
+        if check_authentication(request) != None:
+            return check_authentication(request)
+        
+        new_user_email_info_form = create_user_email_info_form(request.GET or None)
+        context = {'new_user_email_info_form':new_user_email_info_form}
+        return render(request, 'pm/add_user_email_info.html', context)
+
+    def post(self, request):
+        if check_authentication(request) != None:
+            return check_authentication(request)
+
+        if user_info.objects.filter(user=request.user).exists():
+           temp_user_info = user_info.objects.get(user=request.user)
+           new_user_email_info_form = create_user_email_info_form(request.POST or None)
+           
+           if new_user_email_info_form.is_valid():
+                new_user_email_info = new_user_email_info_form.save(commit=False)
+                new_user_email_info.created_date = timezone.now()
+                new_user_email_info.user_info = temp_user_info
+                new_user_email_info.save()
+
+                messages.success(request, 'new user_email_added : ' + str(new_user_email_info.id))
+                return redirect('/cadence/projects/')
+        
+        else:
+            new_user_email_info_form = create_user_email_info_form(request.POST or None)
+
+        context = {'new_user_email_info_form':new_user_email_info_form}
+        return render(request, 'pm/add_user_email_info.html', context)
+
+    def ai_check_inbox(request):
+        if check_authentication(request) != None:
+            return check_authentication(request)
+
+        if user_info.objects.filter(user=request.user).exists():
+            temp_user_info = user_info.objects.get(user=request.user)
+            if user_email_info.objects.filter(user_info=temp_user_info).exists():
+                main_email = user_email_info.objects.filter(user_info=temp_user_info).first()
+
+                get_inbox_info = send_email.get_inbox(main_email)
+
+                temp_model_personality = model_personality.objects.filter(personality_name="check_inbox").first() or ""
+                temp_model_connection  = model_connection.objects.get(id=1)                                             ### change to use different models
+                temp_model_base = model_base.objects.get(id=temp_model_connection.model_base.id)
+                temp_model_base_connection = model_base_user_connection.objects.get(chat_user=request.user, model_base=temp_model_base)
+
+                promt_message_temp = f"""Review my unread emails below and generate my Chief of Staff briefing. 
+                Today's date and time is: {timezone.now()}.
+                Pay special attention to:
+                    1. Any scheduling conflicts or upcoming meetings in the next 48 hours.
+                    2. Unresolved questions or bottlenecks blocking my team.
+                    3. Deadlines occurring within the next 7 days.
+                
+                Here are the unread emails:
+                {get_inbox_info}"""
+
+                temp_response = send_message_to_model(
+                                promt_message = promt_message_temp, user_request = request, 
+                                personality = temp_model_personality, run_tempereature=temp_model_personality.personality_temp, 
+                                top_p=temp_model_personality.personality_top_p, chat_tool = "thinking", 
+                                model_base = temp_model_base.model_base_url, #model_con
+                                model_name = temp_model_connection.model_name, 
+                                model_api_key = temp_model_base_connection.model_api_key,) #model_con
+                
+                context = get_user_dashboard_info(request)
+                context['inbox_summary'] = temp_response.content
+                context['user_inbox'] = "True"
+                messages.success(request, 'see inbox summary below!')
+                return render(request, 'pm/manage_projects.html', context)
+
+            else:
+                messages.warning(request, 'current user does not have email connection, go to /cadence/add_email_connection/ to add one')
+                return redirect('/cadence/projects/')
+
+        else:
+            messages.warning(request, 'current user does not have user_info')
+            return redirect('/cadence/projects/')
+
+
+

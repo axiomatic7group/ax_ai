@@ -25,8 +25,8 @@
             <div class="main_task_main_body">
                 <!-- start of main task body header -->
                 <div class="main_task_main_body_header">
-                    <h1> {{main_task.task_name|safe}} </h1>
-                    <h6> {{main_task.task_description|safe}} </h6>
+                    <h1> {{main_task.task_name|safe}} - {{user_reciver.first_name|safe}} {{user_reciver.last_name|safe}}</h1>
+                    <h6> {{main_task.task_description}} </h6>
                 </div>
                 <!-- end of main task body header -->
                 <!-- start of main task body comments -->
@@ -79,6 +79,7 @@
         {% else%}  {% endif %}
 
     <div class="user_message_body">
+
         <div class="sender_list">
             {% for send in list_of_sender %}
             
@@ -111,6 +112,13 @@
 
             <div class="form_div_chat" >
                 <form name='add_user_messages_form' id='add_user_messages_form' action='/cadence/user_message_view/{{message_sender}}' method='post'>
+                    {% if user_inbox %}
+                        <div>
+                            <label for="send-as-email">Send as email? </label>
+                            <input type="checkbox" name="send_as_email" id="send-as-email" value="true">
+                        <div>
+                    {% endif %}
+
                     {% csrf_token %}
 
                     {{add_user_messages_form.as_p|safe}}

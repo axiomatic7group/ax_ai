@@ -132,6 +132,12 @@ class add_stakeholder_to_project(ModelForm):
         fields = '__all__'
 
 
+class add_user_messages_chat(ModelForm):
+    class Meta:
+        model = user_messages
+        exclude = ['date_created', 'message_warning_level', 'message_sender', 'user_reciver', 'message_type']
+        fields = '__all__'
+
 """
 
 ### For Beta ###

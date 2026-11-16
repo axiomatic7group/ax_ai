@@ -3,6 +3,8 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from django.db.models import Q, CheckConstraint
 from django.core.exceptions import ValidationError
+from django.core import signing
+
 
 from synapse.models import user_info
 
@@ -69,6 +71,10 @@ status_for_tasks = [
     ('p2o', 'pending task other'),
 ]
 
+email_type = [
+    ('gmail', 'gmail'),
+    ('proton', 'proton'),
+]
 
 class project(models.Model):
     date_created = models.DateTimeField('date created', default=timezone.now)
@@ -188,3 +194,24 @@ class task_status_list(models.Model):
     task_observed = models.ForeignKey(task, on_delete=models.CASCADE, unique=False)
     status_of_task = models.CharField(max_length=5, choices=status_for_tasks, default='p2o')
     task_message = models.TextField()
+
+class user_email_info(models.Model):
+    date_created = models.DateTimeField('date created', default=timezone.now)
+    user_info = models.ForeignKey(user_info, on_delete=models.CASCADE, unique=False)
+    email_type = models.CharField(max_length=25, choices=email_type, default='gamil')
+    user_name = models.CharField(max_length=250, default='')
+    user_email = models.CharField(max_length=250, default='')
+
+    _user_password = models.CharField(max_length=250, blank=True, null=True, db_column='user_password')
+    @property
+    def user_password(self):
+        if not self._user_password:
+            return ""
+        try:
+            return signing.loads(self._user_password)
+        except signing.BadSignature:
+            return ""
+
+    @user_password.setter
+    def user_password(self, value):
+        self._user_password = signing.dumps(value) if value else None

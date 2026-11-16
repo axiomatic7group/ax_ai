@@ -31,7 +31,7 @@ from pydantic import BaseModel, Field, create_model
 from tempfile import NamedTemporaryFile
 
 import pandas as pd
-import json, re, requests, random, os, urllib.parse, subprocess, markdown, base64, signal
+import json, re, requests, random, os, urllib.parse, subprocess, markdown, base64
 from bs4 import BeautifulSoup
 from datetime import datetime
 from types import SimpleNamespace
@@ -127,17 +127,13 @@ def get_local_search_results(search_query, links_count=4):
             log_path=os.path.join(sandbox_safe_tmp, "geckodriver.log")
         )
 
-
         options = Options()
         options.add_argument("-headless")
         options.set_preference("general.useragent.override", user_agent)
         options.set_preference("dom.webdriver.enabled", False)
         options.set_preference("useAutomationExtension", False)
-        print("starting driver 2.....")
         driver = Firefox(options=options, service=service)
-        print("starting driver 3.....")
         driver.get(url)
-
 
         links = driver.find_elements(By.TAG_NAME, 'a')
         print("check 1",links)
@@ -223,7 +219,6 @@ def check_files(request):
         qs = quicksand(file_to_check)
         qs.process()
     
-
     output = {}
     if not qs.results.get('exploits_found'):
         try:
@@ -241,13 +236,10 @@ def check_files(request):
             
             if file_type == "txt" or file_type == "md":
                 loader = TextLoader(temp_name, encoding='utf-8')
-                
             elif file_type == "py":
                 loader = PythonLoader(temp_name)
-            
             elif file_type == "pdf":
                 loader = PyPDFLoader(temp_name)
-
             else:
                 return {'message': 'Unsupported type', 'state': '0'}
             
@@ -280,7 +272,8 @@ def form_to_json_schema(form):
 def check_authentication(check_request):
     if not check_request.user.is_authenticated:
         return redirect("/login")
-
+    elif not check_request.user.is_staff:
+        return redirect("/login")
 
 def create_dynamic_schema_from_prompt(prompt_json_str: str) -> type[BaseModel]:
     try:
@@ -316,14 +309,15 @@ def send_task_to_model(promt_message, user_request, chat_summary="",chat_tool="f
         temp_fixed_output = promt_message['fixed_output']
         promt_message = str(promt_message['user_prompt'])
 
-
     if chat_tool == "thinking":
         run_model_start = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, reasoning={"effort": "medium"}, )
-    if chat_tool == "websearch":
-        run_model_start = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, reasoning={"effort": "medium"}, ) 
+    if chat_tool == "local_files":
+            run_model_start = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, reasoning={"effort": "low"}, )
+    elif chat_tool == "audio_files":
+        run_model_start = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, temperature= 0.15, extra_body={"cache_prompt": True }) 
     else:
         run_model_start = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, temperature= run_tempereature, top_p=top_p,) 
-    
+
     class StructuredResponse(BaseModel):
         status: Literal["1", "0"] = Field(description="Return '1' if successful/approved, or '0' if failed/rejected.")
         response: str = Field(description="The primary response to the user")
@@ -345,24 +339,71 @@ def send_task_to_model(promt_message, user_request, chat_summary="",chat_tool="f
         questions_list = run_model_w_struct.invoke(f"{temp_prompt}\\n\\n User Prompt:{promt_message}")
         questions_dict = []
         for i, q in enumerate(questions_list.questions):
-            questions_dict.append({'question':get_local_search_results(q, 5)})
+            if i > 2:
+                continue
+            else:
+                questions_dict.append({'question':get_local_search_results(q, 4)})
 
         system_context = {'system': {'priority':reduce_tokens(str(fast_personality)), 'secondary':reduce_tokens(personality)}, 'search':questions_dict, 'chat_summary':reduce_tokens(chat_summary),}
     elif chat_tool == "local_files":
         system_context = {'system': {'priority':reduce_tokens(str(reasoning_personality)), 'secondary':reduce_tokens(personality)}, 'local files':check_project_files(user_request), 'chat_summary':reduce_tokens(chat_summary),}
 
+    elif chat_tool == "audio_files":
+        run_model = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, temperature= 0.15, extra_body={"cache_prompt": True }) 
+        if user_request.FILES.get("filename"):
+            uploaded_file = user_request.FILES["filename"]
+            input_bytes = uploaded_file.read()
+
+            process = subprocess.Popen(
+                ["ffmpeg", "-i", "pipe:0", "-f", "wav", "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", "pipe:1"],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL)
+
+            wav_bytes, _ = process.communicate(input=input_bytes)
+            encoded_string = base64.b64encode(wav_bytes).decode('utf-8')
+
+            messages_payload = [
+                {"role": "system", "content": str(reduce_tokens(audio_personality))},
+                {"role": "user", "content": 
+                    [{"type": "input_audio", "input_audio": {"data": encoded_string, "format": "wav" }},
+                    {"type": "text", "text": promt_message}]}]
+
+            payload = {
+                "model": "ultravox",
+                "messages": messages_payload,
+                "temperature": 0.15,
+                "cache_prompt": True
+            }
+
+            response = requests.post("http://127.0.0.1:8080/v1/chat/completions", headers={"Content-Type": "application/json"}, json=payload,)
+
+            temp_response = response.json()
+            first_dict = {'choices': temp_response.pop('choices')}
+            remaining_dict = temp_response
+            
+            return SimpleNamespace(content=first_dict, response_metadata=remaining_dict)
+        else:
+            return SimpleNamespace(content="No Audio File was submited", response_metadata="None")
+    else:
+        system_context = {'system': {'priority':reduce_tokens(fast_personality), 'secondary':reduce_tokens(personality),}, 'chat_summary':reduce_tokens(chat_summary),}
+    
+
     if strcutured_output:
         new_model = create_dynamic_schema_from_prompt(strcutured_output)
         structured_model = run_model_start.with_structured_output(new_model)
-        user_prompt = ChatPromptTemplate.from_messages([("human", "{system_context}\n\nUser Request: {prompt_message}"),])
+        user_prompt = ChatPromptTemplate.from_messages([("system", "{system_context}"), 
+                                                            ("human", "User Request: {user_message}"),])
         chain = user_prompt | structured_model
-        response = chain.invoke({"prompt_message": promt_message, "system_context": system_context})
+        response = chain.invoke({"user_message": promt_message, "system_context": system_context})
         return response
 
     else:
-        user_prompt = ChatPromptTemplate.from_messages([("human", "{system_context}\n\nUser Request: {promt_message}"),])
+        user_prompt = ChatPromptTemplate.from_messages([ ("system", "{system_context}"), 
+                                                            ("human", "User Request: {user_message}"),])
+            
         chain = user_prompt | run_model
-        response = chain.invoke({"promt_message": promt_message, "system_context": system_context})
+        response = chain.invoke({"user_message": promt_message, "system_context": system_context,})
         return response
 
 def send_message_to_model(promt_message, user_request, chat_summary="", chat_tool="fast", personality="",
@@ -375,10 +416,9 @@ def send_message_to_model(promt_message, user_request, chat_summary="", chat_too
         run_model = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, temperature= 0.15, extra_body={"cache_prompt": True }) 
     else:
         run_model = ChatOpenAI( base_url=model_base, api_key=model_api_key, model=model_name, temperature= run_tempereature, top_p=top_p,) 
-        
-    if isinstance(chat_history_list, pd.DataFrame):
-        chat_history = []
 
+    chat_history = []
+    if isinstance(chat_history_list, pd.DataFrame):
         if len(chat_history_list) == 1:
             chat_history = []
         else:
@@ -961,7 +1001,22 @@ class create_model_personality(View):
         return redirect('/daemon/new_model_personality/')
 
 models_dataset = [
-
+{
+"name": "Google - Gemma 4 12B ",
+"total_params": 12.0,
+"active_params": 12.0,
+"model_info": {"model_type":"Recommended Overall",
+                "4-bit (Q4)":"google/gemma-4-12B-it-qat-q4_0-gguf:Q4_0",},
+},
+{
+"name": "Orca - Qwen",
+"total_params": 27.0,
+"active_params": 27.0,
+"model_info": {"model_type":"Recommended Coding Model",
+                "4-bit (Q4)":"orcarouter/Qwen3.8-27B-Uncensored-GGUF:Q4_K_M",
+                "8-bit (Q8)":"orcarouter/Qwen3.8-27B-Uncensored-GGUF:Q8_0",
+                "FP16 (Unquantized)":"orcarouter/Qwen3.8-27B-Uncensored-GGUF:F16",},
+},
 {
 "name": "Llama - Ultravox",
 "total_params": 1.0,
@@ -1019,15 +1074,7 @@ class initiate_models(View):
                 command_response = call_command('testin_initiate', int(request.POST['models_to_initiate']))
                 context['message'] = command_response
             elif request.POST['start_stop'] == "stop":
-                for pid in [pid for pid in os.listdir('/proc') if pid.isdigit()]:
-                    try:
-                        with open(os.path.join('/proc', pid, 'cmdline'), 'rb') as f:
-                            cmdline = f.read().decode('utf-8', errors='ignore')
-                            # Check if 'llama-server' exists in the process execution arguments
-                            if 'llama-server' in cmdline:
-                                os.kill(int(pid), signal.SIGTERM)  # Graceful stop
-                    except (FileNotFoundError, ProcessLookupError, PermissionError):
-                        continue
+                subprocess.Popen(["pkill", "-f", "llama-server"]) 
 
         models_to_initiate = pd.DataFrame(model_intiate.objects.all().values())
         context['models_to_initiate'] = models_to_initiate.to_dict('records')
@@ -1042,7 +1089,7 @@ class initiate_models(View):
             new_initiatie_model = model_intiate.objects.create(
                 model_base_name = "1",
                 name_nd_quant = request.POST['quant_link'],
-                path_to_build = "/usr/local/bin/",
+                path_to_build = "/home/daniel/llama.cpp/build/bin",
                 server_type = 'llama.cpp',)
             
 
